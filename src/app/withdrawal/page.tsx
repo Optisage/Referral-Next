@@ -36,6 +36,18 @@ const COUNTRY_CURRENCY_MAP = {
   }
 };
 
+// Define a type for the country keys
+type CountryKey = keyof typeof COUNTRY_CURRENCY_MAP;
+
+// Define a type for the withdrawal history items
+interface WithdrawalHistoryItem {
+  id: string;
+  amount: number;
+  date: Date;
+  status: 'completed' | 'pending';
+  country: CountryKey;
+}
+
 export default function Withdrawal() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -48,20 +60,20 @@ export default function Withdrawal() {
     }
   }, [user, loading, router]);
   
-  const [country, setCountry] = useState('nigeria');
-  const [amount, setAmount] = useState('');
-  const [withdrawalMethod, setWithdrawalMethod] = useState('bank');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [accountName, setAccountName] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [mobileProvider, setMobileProvider] = useState('');
-  const [calculatorPoints, setCalculatorPoints] = useState('');
+  const [country, setCountry] = useState<CountryKey>('nigeria');
+  const [amount, setAmount] = useState<string>('');
+  const [withdrawalMethod, setWithdrawalMethod] = useState<'bank' | 'mobile'>('bank');
+  const [accountNumber, setAccountNumber] = useState<string>('');
+  const [accountName, setAccountName] = useState<string>('');
+  const [bankName, setBankName] = useState<string>('');
+  const [mobileNumber, setMobileNumber] = useState<string>('');
+  const [mobileProvider, setMobileProvider] = useState<string>('');
+  const [calculatorPoints, setCalculatorPoints] = useState<string>('');
   
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   
   // Get currency info based on selected country
   const currency = COUNTRY_CURRENCY_MAP[country];
@@ -82,14 +94,14 @@ export default function Withdrawal() {
   const minWithdrawalAmount = 500 * currency.rate;
   
   // Mock withdrawal history
-  const withdrawalHistory = [
+  const withdrawalHistory: WithdrawalHistoryItem[] = [
     { id: 'with-1', amount: 2500 * COUNTRY_CURRENCY_MAP['nigeria'].rate, date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), status: 'completed', country: 'nigeria' },
     { id: 'with-2', amount: 1500 * COUNTRY_CURRENCY_MAP['ghana'].rate, date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), status: 'completed', country: 'ghana' },
     { id: 'with-3', amount: 500 * COUNTRY_CURRENCY_MAP['kenya'].rate, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), status: 'pending', country: 'kenya' },
   ];
 
-  const handleCountryChange = (e) => {
-    const newCountry = e.target.value;
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCountry = e.target.value as CountryKey;
     setCountry(newCountry);
     
     // Reset amount when changing countries
@@ -158,7 +170,7 @@ export default function Withdrawal() {
   };
   
   // Calculate points required based on amount and currency
-  const calculatePointsNeeded = (amountValue) => {
+  const calculatePointsNeeded = (amountValue: string | undefined): number => {
     if (!amountValue) return 0;
     // Convert local currency to NGN to calculate points
     const amountInNGN = parseFloat(amountValue) / currency.rate;
