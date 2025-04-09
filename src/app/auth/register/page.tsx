@@ -4,7 +4,7 @@ import { useState, FormEvent, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { FaWhatsapp } from 'react-icons/fa';
+import Image from 'next/image';
 import styles from './register.module.css';
 import Preloader from '@/components/Preloader';
 
@@ -139,8 +139,14 @@ export default function Register() {
       {loggingOut && <Preloader fullScreen state="auth_logout" />}
       
       <div className={styles.logoContainer}>
-        <div className="flex justify-center">
-          <FaWhatsapp className={styles.logo} />
+        <div className={styles.logoWrapper}>
+          <Image 
+            src="/Optisage-Log0-white.svg" 
+            alt="OptSage Logo" 
+            width={64} 
+            height={64}
+            className="h-16 w-16" 
+          />
         </div>
         <h2 className={styles.title}>
           {step === 1 ? 'Create your account' : 'Verify your account'}
