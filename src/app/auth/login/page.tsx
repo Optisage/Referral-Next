@@ -125,9 +125,6 @@ export default function Login() {
   
   return (
     <div className={styles.container}>
-      {/* Show preloader when logging out to avoid flashing logout */}
-      {loggingOut && <Preloader fullScreen state="auth_logout" />}
-      
       {/* Show preloader when loading */}
       {loading && <Preloader fullScreen state={otpSent ? "auth_verify_otp" : "auth_send_otp"} />}
       

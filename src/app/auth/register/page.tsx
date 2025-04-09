@@ -136,7 +136,6 @@ export default function Register() {
     <div className={styles.container}>
       {/* Show preloader when loading */}
       {loading && <Preloader fullScreen state={step === 1 ? "auth_send_otp" : "auth_register"} />}
-      {loggingOut && <Preloader fullScreen state="auth_logout" />}
       
       <div className={styles.logoContainer}>
         <div className={styles.logoWrapper}>
