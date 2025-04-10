@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './register.module.css';
 import Preloader from '@/components/Preloader';
+import CountryCodeSelect from '@/components/CountryCodeSelect';
 
 export default function Register() {
   const { register, sendOtp, verifyOtp, loggingOut } = useAuth();
@@ -20,6 +21,7 @@ export default function Register() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+234'); // Default to Nigeria
   const [whatsappChannelName, setWhatsappChannelName] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   
@@ -44,7 +46,8 @@ export default function Register() {
     
     try {
       setLoading(true);
-      await sendOtp(email);
+      // Send OTP to either email or whatsapp number
+      await sendOtp(whatsappNumber);
       setStep(2);
       // Focus the first OTP input when OTP is sent
       setTimeout(() => {
@@ -109,15 +112,19 @@ export default function Register() {
       return;
     }
     
+    const fullWhatsappNumber = whatsappNumber.startsWith(countryCode) 
+      ? whatsappNumber 
+      : countryCode + whatsappNumber.replace(/^\+/, '');
+    
     try {
       setLoading(true);
-      const isValid = await verifyOtp(email, otpValue);
+      const isValid = await verifyOtp(fullWhatsappNumber, otpValue);
       
       if (isValid) {
         await register({
           fullName,
           email,
-          whatsappNumber,
+          whatsappNumber: fullWhatsappNumber,
           whatsappChannelName,
         });
         router.push('/dashboard');
@@ -208,17 +215,16 @@ export default function Register() {
                   WhatsApp Number
                 </label>
                 <div className="mt-1">
-                  <input
-                    id="whatsappNumber"
-                    name="whatsappNumber"
-                    type="tel"
-                    autoComplete="tel"
-                    required
-                    value={whatsappNumber}
-                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                  <CountryCodeSelect
+                    value={countryCode}
+                    onChange={setCountryCode}
+                    phone={whatsappNumber}
+                    onPhoneChange={setWhatsappNumber}
                     className={styles.inputField}
-                    placeholder="+1234567890"
                   />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Please provide your country code and WhatsApp number
+                  </p>
                 </div>
               </div>
               
@@ -247,6 +253,15 @@ export default function Register() {
                 >
                   {loading ? 'Processing...' : 'Continue'}
                 </button>
+              </div>
+              
+              <div className={styles.formFooter}>
+                <p>
+                  Already have an account?{' '}
+                  <Link href="/auth/login" className={styles.link}>
+                    Sign in
+                  </Link>
+                </p>
               </div>
             </form>
           ) : (
@@ -284,13 +299,6 @@ export default function Register() {
               </div>
             </form>
           )}
-          
-          <p className={styles.footerText}>
-            Already have an account?{' '}
-            <Link href="/auth/login" className={styles.footerLink}>
-              Sign in
-            </Link>
-          </p>
         </div>
       </div>
     </div>

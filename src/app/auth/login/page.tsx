@@ -5,15 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaEnvelope, FaLock, FaExclamationCircle } from 'react-icons/fa';
+import { FaPhone, FaExclamationCircle } from 'react-icons/fa';
 import styles from './login.module.css';
 import Preloader from '@/components/Preloader';
+import CountryCodeSelect from '@/components/CountryCodeSelect';
 
 export default function Login() {
   const { login, sendOtp, verifyOtp, logout, loggingOut } = useAuth();
   const router = useRouter();
   
-  const [email, setEmail] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+234'); // Default to Nigeria
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,14 +35,16 @@ export default function Login() {
     e.preventDefault();
     setError('');
     
-    if (!email) {
-      setError('Email is required');
+    if (!whatsappNumber) {
+      setError('WhatsApp number is required');
       return;
     }
     
     try {
       setLoading(true);
-      await sendOtp(email);
+      // For demo purposes, we'll simulate sending OTP to the phone number
+      // In a real app, this would call an API to send the OTP to the WhatsApp number
+      await sendOtp(whatsappNumber);
       setOtpSent(true);
       // Focus the first OTP input when OTP is sent
       setTimeout(() => {
@@ -105,12 +109,20 @@ export default function Login() {
       return;
     }
     
+    const fullWhatsappNumber = whatsappNumber.startsWith(countryCode) 
+      ? whatsappNumber 
+      : countryCode + whatsappNumber.replace(/^\+/, '');
+    
     try {
       setLoading(true);
-      const isValid = await verifyOtp(email, otpValue);
+      // For demo purposes, we'll use the existing verifyOtp function
+      // In a real app, this would verify the OTP sent to the WhatsApp number
+      const isValid = await verifyOtp(fullWhatsappNumber, otpValue);
       
       if (isValid) {
-        await login(email, otpValue);
+        // Generate a mock email for the login function since we're not collecting email
+        const mockEmail = `user_${Math.floor(Math.random() * 10000)}@example.com`;
+        await login(mockEmail, otpValue, fullWhatsappNumber);
         router.push('/dashboard');
       } else {
         setError('Invalid OTP. Please try again.');
@@ -145,8 +157,8 @@ export default function Login() {
         </h2>
         <p className={styles.subtitle}>
           {otpSent 
-            ? `We've sent a verification code to ${email}`
-            : 'Enter your email to receive a one-time password'}
+            ? `We've sent a verification code to ${whatsappNumber}`
+            : 'Enter your WhatsApp number to receive a one-time password'}
         </p>
 
         <div className={styles.formCard}>
@@ -160,24 +172,20 @@ export default function Login() {
           {!otpSent ? (
             <form className={styles.form} onSubmit={handleSendOtp}>
               <div className={styles.formGroup}>
-                <label htmlFor="email" className={styles.formLabel}>
-                  Email address
+                <label htmlFor="whatsappNumber" className={styles.formLabel}>
+                  WhatsApp Number
                 </label>
-                <div className={styles.inputWrapper}>
-                  <div className={styles.inputIcon}>
-                    <FaEnvelope className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                <div className="mt-1">
+                  <CountryCodeSelect
+                    value={countryCode}
+                    onChange={setCountryCode}
+                    phone={whatsappNumber}
+                    onPhoneChange={setWhatsappNumber}
                     className={styles.formInput}
-                    placeholder="Enter your email"
                   />
+                  <p className="mt-2 text-sm text-gray-500">
+                    We'll send a verification code to this WhatsApp number
+                  </p>
                 </div>
               </div>
 
@@ -199,6 +207,15 @@ export default function Login() {
                     'Send OTP'
                   )}
                 </button>
+              </div>
+
+              <div className={styles.formFooter}>
+                <p>
+                  Don't have an account yet?{' '}
+                  <Link href="/auth/register" className={styles.formLink}>
+                    Sign up
+                  </Link>
+                </p>
               </div>
             </form>
           ) : (
@@ -249,33 +266,13 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setOtpSent(false)}
-                  className={styles.linkButton}
+                  className={styles.backButton}
                 >
-                  Back to login
+                  Go back
                 </button>
               </div>
             </form>
           )}
-          
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                href="/auth/register"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-whatsapp-green bg-whatsapp-light-green hover:bg-whatsapp-light-green/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-whatsapp-light-green transition-all duration-200"
-              >
-                Register Now
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -16,10 +16,10 @@ interface AuthContextType {
   loading: boolean;
   pageLoading: boolean;
   loggingOut: boolean;
-  login: (email: string, otp: string) => Promise<void>;
+  login: (email: string, otp: string, whatsappNumber: string) => Promise<void>;
   logout: () => Promise<void>;
-  verifyOtp: (email: string, otp: string) => Promise<boolean>;
-  sendOtp: (email: string) => Promise<void>;
+  verifyOtp: (identifier: string, otp: string) => Promise<boolean>;
+  sendOtp: (identifier: string) => Promise<void>;
   register: (userData: Omit<User, 'id' | 'referralLink'>) => Promise<void>;
   setPageLoading: (isLoading: boolean) => void;
 }
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, [initialized]);
 
-  const login = useCallback(async (email: string, otp: string): Promise<void> => {
+  const login = useCallback(async (email: string, otp: string, whatsappNumber: string): Promise<void> => {
     setLoading(true);
     try {
       // In a real app, this would make an API call to verify the OTP and get user data
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         id: '123456',
         fullName: 'Test User',
         email,
-        whatsappNumber: '+1234567890',
+        whatsappNumber,
         whatsappChannelName: 'Test Channel',
         referralLink: `https://optsage.com/ref/123456`,
       };
@@ -104,16 +104,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  const verifyOtp = useCallback(async (email: string, otp: string): Promise<boolean> => {
+  const verifyOtp = useCallback(async (identifier: string, otp: string): Promise<boolean> => {
     // In a real app, this would call an API to verify the OTP
+    // The identifier can be either an email or whatsapp number
     // For demo, we'll accept any OTP
+    console.log(`Verifying OTP for ${identifier}`);
     return true;
   }, []);
 
-  const sendOtp = useCallback(async (email: string): Promise<void> => {
+  const sendOtp = useCallback(async (identifier: string): Promise<void> => {
     // In a real app, this would call an API to send the OTP
+    // The identifier can be either an email or whatsapp number
     // For demo, we'll just simulate the process
-    console.log(`OTP sent to ${email}`);
+    console.log(`OTP sent to ${identifier}`);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }, []);
 
   const register = useCallback(async (userData: Omit<User, 'id' | 'referralLink'>): Promise<void> => {
