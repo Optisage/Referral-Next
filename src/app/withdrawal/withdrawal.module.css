@@ -1,17 +1,35 @@
 .container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 2rem 1rem;
+  }
 }
 
 .header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .header {
+    margin-bottom: 2rem;
+  }
 }
 
 .title {
-  font-size: 1.875rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 1.875rem;
+  }
 }
 
 .subtitle {
@@ -99,6 +117,10 @@
   composes: card;
 }
 
+.historyCard .cardHeader {
+  margin-bottom: 0.5rem;
+}
+
 .cardHeader {
   display: flex;
   align-items: center;
@@ -110,6 +132,7 @@
   height: 1.75rem;
   margin-right: 0.5rem;
   color: #075E54;
+  flex-shrink: 0;
 }
 
 .headerTitle {
@@ -193,6 +216,7 @@
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  line-height: 1.5rem;
 }
 
 .flexSpaceX4 {
@@ -239,6 +263,7 @@
   height: 1.25rem;
   margin-right: 0.5rem;
   color: #6b7280;
+  flex-shrink: 0;
 }
 
 .overflowHidden {
@@ -249,10 +274,28 @@
   min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  width: 100%;
 }
 
 .bgGray50 {
   background-color: #f9fafb;
+}
+
+.bgGray50 th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .bgGray50 th {
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .bgWhite {
@@ -260,10 +303,17 @@
 }
 
 .px6 {
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   font-size: 0.875rem;
   border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .px6 {
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .px2 {
@@ -316,4 +366,59 @@
   .historyCard {
     grid-column: 1 / -1;
   }
+}
+
+/* Mobile Card View for Withdrawal History */
+.withdrawalMobileCards {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .withdrawalMobileCards {
+    display: none;
+  }
+}
+
+.withdrawalMobileTable {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .withdrawalMobileTable {
+    display: table;
+    width: 100%;
+  }
+}
+
+.withdrawalCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: white;
+}
+
+.withdrawalCardRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.withdrawalCardRow:last-child {
+  border-bottom: none;
+}
+
+.withdrawalCardLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.withdrawalCardValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: right;
 } 

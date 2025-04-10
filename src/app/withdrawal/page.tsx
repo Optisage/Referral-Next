@@ -50,7 +50,7 @@ interface WithdrawalHistoryItem {
 
 export default function Withdrawal() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, setPageLoading } = useAuth();
   const { stats } = useReferral();
   
   // Redirect if not authenticated
@@ -59,6 +59,17 @@ export default function Withdrawal() {
       router.push('/auth/login');
     }
   }, [user, loading, router]);
+  
+  // Signal page has loaded
+  useEffect(() => {
+    // Set page loading false when component mounts
+    setPageLoading(false);
+    
+    // Signal page is loading on unmount (when navigating away)
+    return () => {
+      setPageLoading(true);
+    };
+  }, [setPageLoading]);
   
   const [country, setCountry] = useState<CountryKey>('nigeria');
   const [amount, setAmount] = useState<string>('');
@@ -474,26 +485,60 @@ export default function Withdrawal() {
         
         {/* History */}
         <div className={styles.historyCard}>
-          <div className={styles.flexItems}>
+          <div className={`${styles.flexItems} ${styles.cardHeader}`}>
             <FaHistory className={styles.h5} />
             <h2 className={styles.textXl}>Withdrawal History</h2>
           </div>
           
           <div className={styles.card}>
             <div className={styles.overflowHidden}>
-              <table className={styles.minWFull}>
+              {/* Mobile Card View */}
+              <div className={styles.withdrawalMobileCards}>
+                {withdrawalHistory.map((withdrawal) => {
+                  const currencyInfo = COUNTRY_CURRENCY_MAP[withdrawal.country];
+                  return (
+                    <div key={withdrawal.id} className={styles.withdrawalCard}>
+                      <div className={styles.withdrawalCardRow}>
+                        <span className={styles.withdrawalCardLabel}>ID</span>
+                        <span className={styles.withdrawalCardValue}>{withdrawal.id}</span>
+                      </div>
+                      <div className={styles.withdrawalCardRow}>
+                        <span className={styles.withdrawalCardLabel}>Amount</span>
+                        <span className={styles.withdrawalCardValue}>
+                          {currencyInfo.symbol}{withdrawal.amount.toLocaleString(undefined, {maximumFractionDigits: 2})}
+                        </span>
+                      </div>
+                      <div className={styles.withdrawalCardRow}>
+                        <span className={styles.withdrawalCardLabel}>Date</span>
+                        <span className={styles.withdrawalCardValue}>{formatDate(withdrawal.date)}</span>
+                      </div>
+                      <div className={styles.withdrawalCardRow}>
+                        <span className={styles.withdrawalCardLabel}>Status</span>
+                        <span className={`${styles.px2} ${styles.inlineFlex} ${styles.textXs} ${styles.leading5} ${styles.fontSemibold} ${styles.roundedFull} ${
+                          withdrawal.status === 'completed' ? styles.bgGreen100 : styles.bgYellow100
+                        }`}>
+                          {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <table className={styles.withdrawalMobileTable}>
                 <thead className={styles.bgGray50}>
                   <tr>
-                    <th scope="col" className={styles.px6}>
+                    <th scope="col">
                       ID
                     </th>
-                    <th scope="col" className={styles.px6}>
+                    <th scope="col">
                       Amount
                     </th>
-                    <th scope="col" className={styles.px6}>
+                    <th scope="col">
                       Date
                     </th>
-                    <th scope="col" className={styles.px6}>
+                    <th scope="col">
                       Status
                     </th>
                   </tr>

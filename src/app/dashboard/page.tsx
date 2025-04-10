@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useReferral } from '@/context/ReferralContext';
 import { FaUsers, FaDollarSign, FaExchangeAlt, FaCopy, FaCheckCircle, FaWhatsapp, FaChartLine, FaMoneyBillWave, FaStar } from 'react-icons/fa';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import styles from './dashboard.module.css';
 import Preloader from '@/components/Preloader';
 
@@ -58,7 +57,7 @@ const getCountryFromPhoneNumber = (phoneNumber: string): string => {
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, setPageLoading } = useAuth();
   const { stats, referrals, copyReferralLink } = useReferral();
   const [copied, setCopied] = useState(false);
   
@@ -77,6 +76,17 @@ export default function Dashboard() {
       router.push('/auth/login');
     }
   }, [user, loading, router]);
+
+  // Signal page has loaded
+  useEffect(() => {
+    // Set page loading false when component mounts
+    setPageLoading(false);
+    
+    // Signal page is loading on unmount (when navigating away)
+    return () => {
+      setPageLoading(true);
+    };
+  }, [setPageLoading]);
   
   const handleCopyLink = () => {
     copyReferralLink();
@@ -84,37 +94,9 @@ export default function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
   
-  // Dummy data for the chart
-  const chartData = [
-    { name: 'Jan', referrals: 40, transactions: 24 },
-    { name: 'Feb', referrals: 30, transactions: 13 },
-    { name: 'Mar', referrals: 20, transactions: 8 },
-    { name: 'Apr', referrals: 27, transactions: 12 },
-    { name: 'May', referrals: 18, transactions: 9 },
-    { name: 'Jun', referrals: 23, transactions: 15 },
-    { name: 'Jul', referrals: 34, transactions: 17 },
-  ];
-  
   if (loading || !user) {
     return <Preloader fullScreen state="dashboard" />;
   }
-  
-  // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-100">
-          <p className="font-medium text-gray-700">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={`item-${index}`} style={{ color: entry.color }}>
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
   
   return (
     <div className={styles.dashboardContainer}>
@@ -240,53 +222,6 @@ export default function Dashboard() {
         <p className="text-sm text-gray-500 mt-3 bg-whatsapp-light-green/20 p-3 rounded-lg">
           Share this link with your WhatsApp group members to earn rewards when they sign up and complete transactions.
         </p>
-      </div>
-      
-      {/* Performance Chart */}
-      <div className={styles.chartSection}>
-        <h2 className={styles.sectionTitle}>
-          <FaChartLine className="mr-2 text-whatsapp-green" /> Performance Overview
-        </h2>
-        <div className={styles.chartContainer}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fill: '#6b7280' }}
-                axisLine={{ stroke: '#e5e7eb' }}
-              />
-              <YAxis 
-                tick={{ fill: '#6b7280' }} 
-                axisLine={{ stroke: '#e5e7eb' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                verticalAlign="top" 
-                height={36} 
-                iconType="circle"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="referrals" 
-                stroke="#25D366" 
-                name="Referrals"
-                strokeWidth={3}
-                dot={{ fill: '#25D366', r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 7, stroke: '#25D366', strokeWidth: 2 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="transactions" 
-                stroke="#075E54" 
-                name="Transactions"
-                strokeWidth={3}
-                dot={{ fill: '#075E54', r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 7, stroke: '#075E54', strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
       </div>
       
       {/* Recent Activity */}

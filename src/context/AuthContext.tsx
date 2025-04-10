@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 interface User {
   id: string;
@@ -14,12 +14,14 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  pageLoading: boolean;
   loggingOut: boolean;
   login: (email: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   verifyOtp: (email: string, otp: string) => Promise<boolean>;
   sendOtp: (email: string) => Promise<void>;
   register: (userData: Omit<User, 'id' | 'referralLink'>) => Promise<void>;
+  setPageLoading: (isLoading: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,11 +41,13 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     // Safe localStorage access only on the client
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !initialized) {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
@@ -54,10 +58,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       }
       setLoading(false);
+      setInitialized(true);
     }
-  }, []);
+  }, [initialized]);
 
-  const login = async (email: string, otp: string): Promise<void> => {
+  const login = useCallback(async (email: string, otp: string): Promise<void> => {
     setLoading(true);
     try {
       // In a real app, this would make an API call to verify the OTP and get user data
@@ -82,9 +87,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     setLoggingOut(true);
     try {
       // Simulate API call delay
@@ -97,21 +102,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setLoggingOut(false);
     }
-  };
+  }, []);
 
-  const verifyOtp = async (email: string, otp: string): Promise<boolean> => {
+  const verifyOtp = useCallback(async (email: string, otp: string): Promise<boolean> => {
     // In a real app, this would call an API to verify the OTP
     // For demo, we'll accept any OTP
     return true;
-  };
+  }, []);
 
-  const sendOtp = async (email: string): Promise<void> => {
+  const sendOtp = useCallback(async (email: string): Promise<void> => {
     // In a real app, this would call an API to send the OTP
     // For demo, we'll just simulate the process
     console.log(`OTP sent to ${email}`);
-  };
+  }, []);
 
-  const register = async (userData: Omit<User, 'id' | 'referralLink'>): Promise<void> => {
+  const register = useCallback(async (userData: Omit<User, 'id' | 'referralLink'>): Promise<void> => {
     setLoading(true);
     try {
       // In a real app, this would make an API call to register the user
@@ -133,17 +138,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const value = {
     user,
     loading,
+    pageLoading,
     loggingOut,
     login,
     logout,
     verifyOtp,
     sendOtp,
     register,
+    setPageLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

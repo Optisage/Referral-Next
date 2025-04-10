@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ReferralProvider } from '@/context/ReferralContext';
 import Header from '@/components/Header';
 import ClientOnly from '@/components/ClientOnly';
+import NavigationProgress from '@/components/NavigationProgress';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
             <ReferralProvider>
               <div className="min-h-screen flex flex-col">
                 <Header />
+                <NavigationProgress />
                 <main className="flex-grow">
                   {children}
                 </main>

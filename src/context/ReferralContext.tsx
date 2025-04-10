@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 
 interface Referral {
   id: string;
@@ -52,8 +52,8 @@ interface ReferralProviderProps {
 }
 
 export const ReferralProvider = ({ children }: ReferralProviderProps) => {
-  // Mock data for the demo
-  const [referrals] = useState<Referral[]>([
+  // Mock data for the demo - using useMemo to avoid recreating on rerenders
+  const referrals = useMemo<Referral[]>(() => [
     {
       id: '1',
       userName: 'John D.',
@@ -75,9 +75,9 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
       status: 'registered',
       pointsEarned: 0, // No points for just registration
     },
-  ]);
+  ], []);
 
-  const [transactions] = useState<Transaction[]>([
+  const transactions = useMemo<Transaction[]>(() => [
     {
       id: '1',
       userId: '2',
@@ -87,18 +87,18 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
       status: 'completed',
       pointsEarned: 50,
     },
-  ]);
+  ], []);
 
-  const [stats] = useState<ReferralStats>({
+  const stats = useMemo<ReferralStats>(() => ({
     totalReferrals: 1234,
     totalPoints: 3567,
     conversionRate: 32,
     growthRateReferrals: 12,
     growthRatePoints: 23,
     growthRateConversion: 5,
-  });
+  }), []);
 
-  const copyReferralLink = (): void => {
+  const copyReferralLink = useCallback((): void => {
     const link = generateReferralLink('123456');
     // Safe clipboard access
     if (typeof window !== 'undefined' && navigator.clipboard) {
@@ -106,19 +106,20 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
         .then(() => console.log('Referral link copied to clipboard'))
         .catch((err) => console.error('Could not copy referral link: ', err));
     }
-  };
+  }, []);
 
-  const generateReferralLink = (userId: string): string => {
+  const generateReferralLink = useCallback((userId: string): string => {
     return `https://optsage.com/ref/${userId}`;
-  };
+  }, []);
 
-  const value = {
+  // Using useMemo for the context value to prevent unnecessary rerenders
+  const value = useMemo(() => ({
     referrals,
     transactions,
     stats,
     copyReferralLink,
     generateReferralLink,
-  };
+  }), [referrals, transactions, stats, copyReferralLink, generateReferralLink]);
 
   return <ReferralContext.Provider value={value}>{children}</ReferralContext.Provider>;
 }; 

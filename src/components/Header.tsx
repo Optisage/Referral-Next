@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaBars, FaTimes, FaUserCircle, FaCog, FaSignOutAlt, FaChartLine, FaHistory, FaWallet } from 'react-icons/fa';
 import Preloader from '@/components/Preloader';
 
@@ -13,6 +13,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -35,6 +36,22 @@ export default function Header() {
     { name: 'Settings', href: '/settings', icon: <FaCog className="mr-2" /> },
   ];
 
+  // Handle optimized navigation
+  const handleNavigation = (href: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    // Close menus
+    setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
+    
+    // Only navigate if not already on the page
+    if (pathname !== href) {
+      router.push(href);
+    }
+  };
+
   return (
     <>
       {loggingOut && <Preloader fullScreen state="auth_logout" />}
@@ -42,7 +59,12 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="flex-shrink-0 flex items-center">
+              <Link 
+                href="/dashboard"
+                prefetch={true}
+                onClick={(e) => handleNavigation('/dashboard', e)} 
+                className="flex-shrink-0 flex items-center"
+              >
                 <Image 
                   src="/Optisage-Log0-white.svg" 
                   alt="OptSage Logo" 
@@ -60,11 +82,13 @@ export default function Header() {
                 <Link 
                   key={link.name}
                   href={link.href}
+                  prefetch={true}
                   className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     pathname === link.href 
                       ? 'bg-white/20 text-white shadow-inner' 
                       : 'text-white/90 hover:bg-white/10 hover:text-white'
                   }`}
+                  onClick={(e) => handleNavigation(link.href, e)}
                 >
                   {link.icon} {link.name}
                 </Link>
@@ -92,8 +116,9 @@ export default function Header() {
                       </div>
                       <Link 
                         href="/settings" 
+                        prefetch={true}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center group"
-                        onClick={() => setProfileMenuOpen(false)}
+                        onClick={(e) => handleNavigation('/settings', e)}
                       >
                         <FaCog className="mr-2 text-gray-400 group-hover:text-whatsapp-green transition-colors" /> Settings
                       </Link>
@@ -133,12 +158,13 @@ export default function Header() {
                 <Link
                   key={link.name}
                   href={link.href}
+                  prefetch={true}
                   className={`flex items-center block px-3 py-2 rounded-md text-base font-medium ${
                     pathname === link.href
                       ? 'bg-white/20 text-white'
                       : 'text-white hover:bg-white/10 hover:text-white'
                   }`}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => handleNavigation(link.href, e)}
                 >
                   {link.icon} {link.name}
                 </Link>
@@ -159,8 +185,9 @@ export default function Header() {
                 <div className="mt-3 px-2 space-y-1">
                   <Link
                     href="/settings"
+                    prefetch={true}
                     className="flex items-center block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-white/10"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => handleNavigation('/settings', e)}
                   >
                     <FaCog className="mr-2" /> Settings
                   </Link>

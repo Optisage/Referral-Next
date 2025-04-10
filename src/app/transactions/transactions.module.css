@@ -1,17 +1,35 @@
 .container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 2rem;
+  }
 }
 
 .header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .header {
+    margin-bottom: 2rem;
+  }
 }
 
 .title {
-  font-size: 1.875rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 1.875rem;
+  }
 }
 
 .subtitle {
@@ -23,8 +41,14 @@
   background-color: white;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  padding: 1.5rem;
+  padding: 1rem;
   margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .filterCard {
+    padding: 1.5rem;
+  }
 }
 
 .filterContainer {
@@ -33,10 +57,25 @@
   gap: 1rem;
 }
 
+@media (min-width: 768px) {
+  .filterContainer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
 .searchContainer {
   position: relative;
   flex-grow: 1;
-  max-width: 32rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .searchContainer {
+    max-width: 32rem;
+  }
 }
 
 .searchIconWrapper {
@@ -71,9 +110,17 @@
 }
 
 .filterWrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .filterWrapper {
+    width: auto;
+    min-width: 200px;
+  }
 }
 
 .filterIconWrapper {
@@ -108,13 +155,14 @@
   background-color: white;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .table {
   min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  width: 100%;
 }
 
 .tableHeader {
@@ -122,7 +170,7 @@
 }
 
 .tableHeaderCell {
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   font-size: 0.75rem;
   font-weight: 500;
@@ -130,6 +178,13 @@
   letter-spacing: 0.05em;
   color: #6b7280;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .tableHeaderCell {
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .headerContent {
@@ -148,9 +203,15 @@
 }
 
 .tableCell {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   white-space: nowrap;
   border-bottom: 1px solid #f3f4f6;
+}
+
+@media (min-width: 768px) {
+  .tableCell {
+    padding: 1rem 1.5rem;
+  }
 }
 
 .cellContent {
@@ -161,11 +222,17 @@
 .statusTag {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 9999px;
   line-height: 1.25;
+}
+
+@media (min-width: 640px) {
+  .statusTag {
+    padding: 0.25rem 0.75rem;
+  }
 }
 
 .completedTag {
@@ -179,10 +246,16 @@
 }
 
 .emptyState {
-  padding: 4rem 2rem;
+  padding: 2rem 1rem;
   text-align: center;
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .emptyState {
+    padding: 4rem 2rem;
+  }
 }
 
 .loadingContainer {
@@ -192,10 +265,57 @@
   height: 100vh;
 }
 
+/* Card view for mobile devices */
+.mobileCards {
+  display: block;
+}
+
 @media (min-width: 768px) {
-  .filterContainer {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+  .mobileCards {
+    display: none;
   }
+}
+
+.mobileTable {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobileTable {
+    display: table;
+    width: 100%;
+  }
+}
+
+.transactionCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: white;
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cardRow:last-child {
+  border-bottom: none;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.cardValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: right;
 } 

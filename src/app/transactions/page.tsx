@@ -21,7 +21,7 @@ interface Transaction {
 
 export default function Transactions() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, setPageLoading } = useAuth();
   const { transactions } = useReferral();
   
   // Redirect if not authenticated
@@ -30,6 +30,17 @@ export default function Transactions() {
       router.push('/auth/login');
     }
   }, [user, loading, router]);
+
+  // Signal page has loaded
+  useEffect(() => {
+    // Set page loading false when component mounts
+    setPageLoading(false);
+    
+    // Signal page is loading on unmount (when navigating away)
+    return () => {
+      setPageLoading(true);
+    };
+  }, [setPageLoading]);
 
   // State for filtering and sorting
   const [searchTerm, setSearchTerm] = useState('');
@@ -187,105 +198,138 @@ export default function Transactions() {
       {/* Transactions Table */}
       <div className={styles.tableContainer}>
         {filteredTransactions.length > 0 ? (
-          <table className={styles.table}>
-            <thead className={styles.tableHeader}>
-              <tr>
-                <th 
-                  scope="col" 
-                  className={styles.tableHeaderCell}
-                  onClick={() => handleSort('userName')}
-                >
-                  <div className={styles.headerContent}>
-                    User
-                    {sortConfig.key === 'userName' && (
-                      sortConfig.direction === 'ascending' ? 
-                        <FaSortAmountUp className={styles.sortIcon} /> : 
-                        <FaSortAmountDown className={styles.sortIcon} />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className={styles.tableHeaderCell}
-                  onClick={() => handleSort('amount')}
-                >
-                  <div className={styles.headerContent}>
-                    Amount
-                    {sortConfig.key === 'amount' && (
-                      sortConfig.direction === 'ascending' ? 
-                        <FaSortAmountUp className={styles.sortIcon} /> : 
-                        <FaSortAmountDown className={styles.sortIcon} />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className={styles.tableHeaderCell}
-                  onClick={() => handleSort('date')}
-                >
-                  <div className={styles.headerContent}>
-                    Date
-                    {sortConfig.key === 'date' && (
-                      sortConfig.direction === 'ascending' ? 
-                        <FaSortAmountUp className={styles.sortIcon} /> : 
-                        <FaSortAmountDown className={styles.sortIcon} />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className={styles.tableHeaderCell}
-                  onClick={() => handleSort('status')}
-                >
-                  <div className={styles.headerContent}>
-                    Status
-                    {sortConfig.key === 'status' && (
-                      sortConfig.direction === 'ascending' ? 
-                        <FaSortAmountUp className={styles.sortIcon} /> : 
-                        <FaSortAmountDown className={styles.sortIcon} />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className={styles.tableHeaderCell}
-                  onClick={() => handleSort('pointsEarned')}
-                >
-                  <div className={styles.headerContent}>
-                    Points Earned
-                    {sortConfig.key === 'pointsEarned' && (
-                      sortConfig.direction === 'ascending' ? 
-                        <FaSortAmountUp className={styles.sortIcon} /> : 
-                        <FaSortAmountDown className={styles.sortIcon} />
-                    )}
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className={styles.tableBody}>
+          <>
+            {/* Mobile Card View */}
+            <div className={styles.mobileCards}>
               {sortedTransactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  <td className={styles.tableCell}>
-                    <div className={styles.cellContent}>{transaction.userName}</div>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <div className={styles.cellContent}>₦{transaction.amount.toLocaleString()}</div>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <div className={styles.cellContent}>{formatDate(transaction.date)}</div>
-                  </td>
-                  <td className={styles.tableCell}>
+                <div key={transaction.id} className={styles.transactionCard}>
+                  <div className={styles.cardRow}>
+                    <span className={styles.cardLabel}>User</span>
+                    <span className={styles.cardValue}>{transaction.userName}</span>
+                  </div>
+                  <div className={styles.cardRow}>
+                    <span className={styles.cardLabel}>Amount</span>
+                    <span className={styles.cardValue}>₦{transaction.amount.toLocaleString()}</span>
+                  </div>
+                  <div className={styles.cardRow}>
+                    <span className={styles.cardLabel}>Date</span>
+                    <span className={styles.cardValue}>{formatDate(transaction.date)}</span>
+                  </div>
+                  <div className={styles.cardRow}>
+                    <span className={styles.cardLabel}>Status</span>
                     <span className={`${styles.statusTag} ${transaction.status === 'completed' ? styles.completedTag : styles.pendingTag}`}>
                       {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                     </span>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <div className={styles.cellContent}>{transaction.pointsEarned} points</div>
-                  </td>
-                </tr>
+                  </div>
+                  <div className={styles.cardRow}>
+                    <span className={styles.cardLabel}>Points Earned</span>
+                    <span className={styles.cardValue}>{transaction.pointsEarned} points</span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop Table View */}
+            <table className={styles.mobileTable}>
+              <thead className={styles.tableHeader}>
+                <tr>
+                  <th 
+                    scope="col" 
+                    className={styles.tableHeaderCell}
+                    onClick={() => handleSort('userName')}
+                  >
+                    <div className={styles.headerContent}>
+                      User
+                      {sortConfig.key === 'userName' && (
+                        sortConfig.direction === 'ascending' ? 
+                          <FaSortAmountUp className={styles.sortIcon} /> : 
+                          <FaSortAmountDown className={styles.sortIcon} />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className={styles.tableHeaderCell}
+                    onClick={() => handleSort('amount')}
+                  >
+                    <div className={styles.headerContent}>
+                      Amount
+                      {sortConfig.key === 'amount' && (
+                        sortConfig.direction === 'ascending' ? 
+                          <FaSortAmountUp className={styles.sortIcon} /> : 
+                          <FaSortAmountDown className={styles.sortIcon} />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className={styles.tableHeaderCell}
+                    onClick={() => handleSort('date')}
+                  >
+                    <div className={styles.headerContent}>
+                      Date
+                      {sortConfig.key === 'date' && (
+                        sortConfig.direction === 'ascending' ? 
+                          <FaSortAmountUp className={styles.sortIcon} /> : 
+                          <FaSortAmountDown className={styles.sortIcon} />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className={styles.tableHeaderCell}
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className={styles.headerContent}>
+                      Status
+                      {sortConfig.key === 'status' && (
+                        sortConfig.direction === 'ascending' ? 
+                          <FaSortAmountUp className={styles.sortIcon} /> : 
+                          <FaSortAmountDown className={styles.sortIcon} />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className={styles.tableHeaderCell}
+                    onClick={() => handleSort('pointsEarned')}
+                  >
+                    <div className={styles.headerContent}>
+                      Points Earned
+                      {sortConfig.key === 'pointsEarned' && (
+                        sortConfig.direction === 'ascending' ? 
+                          <FaSortAmountUp className={styles.sortIcon} /> : 
+                          <FaSortAmountDown className={styles.sortIcon} />
+                      )}
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={styles.tableBody}>
+                {sortedTransactions.map((transaction) => (
+                  <tr key={transaction.id}>
+                    <td className={styles.tableCell}>
+                      <div className={styles.cellContent}>{transaction.userName}</div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className={styles.cellContent}>₦{transaction.amount.toLocaleString()}</div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className={styles.cellContent}>{formatDate(transaction.date)}</div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <span className={`${styles.statusTag} ${transaction.status === 'completed' ? styles.completedTag : styles.pendingTag}`}>
+                        {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className={styles.cellContent}>{transaction.pointsEarned} points</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
         ) : (
           <div className={styles.emptyState}>
             No transactions found matching your criteria
