@@ -28,7 +28,7 @@ export default function Header() {
     setProfileMenuOpen(false);
   };
   
-  // Navigation links
+  // Navigation links - used for both desktop and mobile
   const navLinks = [
     { name: 'Dashboard', href: '/dashboard', icon: <FaChartLine className="mr-2" /> },
     { name: 'Transactions', href: '/transactions', icon: <FaHistory className="mr-2" /> },
@@ -154,6 +154,7 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden absolute w-full bg-whatsapp-dark-green shadow-lg z-10">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              {/* Mobile navigation links - show all options */}
               {user && navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -183,14 +184,7 @@ export default function Header() {
                   </div>
                 </div>
                 <div className="mt-3 px-2 space-y-1">
-                  <Link
-                    href="/settings"
-                    prefetch={true}
-                    className="flex items-center block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-white/10"
-                    onClick={(e) => handleNavigation('/settings', e)}
-                  >
-                    <FaCog className="mr-2" /> Settings
-                  </Link>
+                  {/* Only show logout button here, Settings is already in the nav menu */}
                   <button
                     className="w-full text-left flex items-center block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-white/10"
                     onClick={handleLogout}

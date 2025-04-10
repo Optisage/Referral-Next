@@ -175,13 +175,13 @@ export default function Login() {
                 <label htmlFor="whatsappNumber" className={styles.formLabel}>
                   WhatsApp Number
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 phone-input-container">
                   <CountryCodeSelect
                     value={countryCode}
                     onChange={setCountryCode}
                     phone={whatsappNumber}
                     onPhoneChange={setWhatsappNumber}
-                    className={styles.formInput}
+                    className=""
                   />
                   <p className="mt-2 text-sm text-gray-500">
                     We'll send a verification code to this WhatsApp number

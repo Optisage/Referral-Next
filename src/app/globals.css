@@ -66,3 +66,28 @@ html, body {
     width: 75%;
   }
 }
+
+/* Phone Input Styling */
+.phone-input-container {
+  --input-height: 42px;
+}
+
+.phone-input-container button,
+.phone-input-container input {
+  height: var(--input-height) !important;
+  box-sizing: border-box;
+}
+
+.phone-input-container button {
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-input-container input {
+  padding-top: 0;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
+}

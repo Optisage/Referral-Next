@@ -214,13 +214,13 @@ export default function Register() {
                 <label htmlFor="whatsappNumber" className={styles.label}>
                   WhatsApp Number
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 phone-input-container">
                   <CountryCodeSelect
                     value={countryCode}
                     onChange={setCountryCode}
                     phone={whatsappNumber}
                     onPhoneChange={setWhatsappNumber}
-                    className={styles.inputField}
+                    className=""
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Please provide your country code and WhatsApp number

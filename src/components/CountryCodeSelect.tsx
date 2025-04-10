@@ -134,23 +134,23 @@ export default function CountryCodeSelect({
 
   return (
     <div className="relative">
-      <div className="flex w-full">
+      <div className="flex w-full items-stretch">
         <button
           ref={buttonRef}
           type="button"
-          className="flex items-center px-3 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-whatsapp-green"
+          className="flex items-center justify-center px-3 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-whatsapp-green"
           onClick={() => setIsOpen(!isOpen)}
-          style={{ height: '42px' }}
+          style={{ height: '42px', minWidth: '80px' }}
         >
-          <span className="mr-1">{selectedCountry.flag}</span>
-          <span className="hidden sm:inline">{selectedCountry.dialCode}</span>
+          <span className="mr-1 text-base">{selectedCountry.flag}</span>
+          <span className="hidden sm:inline text-sm">{selectedCountry.dialCode}</span>
           <FaChevronDown className="ml-1 h-3 w-3" />
         </button>
         
         <input
           ref={inputRef}
           type="tel"
-          className={`flex-1 min-w-0 block w-full px-3 border border-gray-300 rounded-r-md focus:outline-none focus:ring-whatsapp-green focus:border-whatsapp-green ${className}`}
+          className={`flex-1 block w-full px-3 border border-gray-300 rounded-r-md focus:outline-none focus:ring-whatsapp-green focus:border-whatsapp-green ${className}`}
           placeholder="Phone number"
           value={phone}
           onChange={handlePhoneChange}
