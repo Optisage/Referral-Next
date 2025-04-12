@@ -104,6 +104,12 @@ export default function Dashboard() {
         <h1 className={styles.dashboardTitle}>
           <FaChartLine className="mr-2 text-whatsapp-green" /> Admin Dashboard
         </h1>
+        <div className="flex items-center mt-2">
+          <FaWhatsapp className="mr-2 text-whatsapp-green" />
+          <p className="text-gray-600">
+            <span className="font-semibold">WhatsApp Group Name:</span> {user.whatsappChannelName}
+          </p>
+        </div>
       </div>
       
       {/* Stats Cards */}

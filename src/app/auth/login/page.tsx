@@ -10,7 +10,7 @@ import styles from './login.module.css';
 import Preloader from '@/components/Preloader';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
 import SlideNotification from '@/components/SlideNotification';
-import { loginWithOtp, verifyOtp } from '@/services/api';
+import { loginWithOtp, verifyOtp as apiVerifyOtp } from '@/services/api';
 
 export default function Login() {
   const { login, loggingOut } = useAuth();
@@ -169,7 +169,7 @@ export default function Login() {
       setLoading(true);
       
       // Call the API to verify OTP
-      const response = await verifyOtp(fullWhatsappNumber, otpValue);
+      const response = await apiVerifyOtp(fullWhatsappNumber, otpValue);
       
       if (response.status === 200) {
         // Store user data and token in local storage

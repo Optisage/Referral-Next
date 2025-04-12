@@ -9,11 +9,11 @@ import styles from './register.module.css';
 import Preloader from '@/components/Preloader';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
 import { FaUser, FaEnvelope, FaPhone, FaHashtag } from 'react-icons/fa';
-import { register, verifyOtp } from '@/services/api';
+import { register, verifyOtp as apiVerifyOtp } from '@/services/api';
 import SlideNotification from '@/components/SlideNotification';
 
 export default function Register() {
-  const { register: authRegister, sendOtp, verifyOtp, loggingOut } = useAuth();
+  const { register: authRegister, sendOtp, verifyOtp: contextVerifyOtp, loggingOut } = useAuth();
   const router = useRouter();
   
   const [step, setStep] = useState(1);
@@ -163,8 +163,8 @@ export default function Register() {
 
       console.log('Verifying with phone number:', fullWhatsappNumber);
 
-      // Call the API to verify OTP
-      const response = await verifyOtp(fullWhatsappNumber, otpValue);
+      // Call the API directly to verify OTP
+      const response = await apiVerifyOtp(fullWhatsappNumber, otpValue);
 
       if (response.status === 200) {
         // Store user data and token in local storage or auth context
