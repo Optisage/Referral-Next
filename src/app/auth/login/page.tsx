@@ -60,17 +60,25 @@ export default function Login() {
       
       // Handle special case for Canada's country code (replace +1CA with +1)
       let formattedCountryCode = countryCode;
-      if (formattedCountryCode === '+1CA') {
-        formattedCountryCode = '+1';
+      let userCountry = 'nigeria'; // Default country
+      
+      // Determine country based on country code
+      if (countryCode === '+234') {
+        userCountry = 'nigeria';
+      } else if (countryCode === '+233') {
+        userCountry = 'ghana';
+      } else if (countryCode === '+1') {
+        // Determine if Canada or USA based on which flag was selected
+        const selectedCountry = localStorage.getItem('selectedCountry');
+        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
+      } else if (countryCode === '+52') {
+        userCountry = 'mexico';
       }
       
-      // Format country code - remove any + and non-digits
-      const countryDigits = formattedCountryCode.replace(/\D/g, '');
+      // Combine country code with phone digits (don't add another + sign)
+      const fullWhatsappNumber = `${formattedCountryCode}${phoneDigits}`;
       
-      // Combine with + at the beginning
-      const fullWhatsappNumber = `+${countryDigits}${phoneDigits}`;
-      
-      // Validate that there is at least 1 digit for a phone number
+      // Less restrictive validation
       if (phoneDigits.length < 1) {
         throw new Error('Please enter a valid phone number');
       }
@@ -168,22 +176,18 @@ export default function Login() {
         userCountry = 'nigeria';
       } else if (countryCode === '+233') {
         userCountry = 'ghana';
-      } else if (countryCode === '+1CA') {
-        userCountry = 'canada';
-        formattedCountryCode = '+1';
       } else if (countryCode === '+1') {
-        userCountry = 'usa';
+        // Determine if Canada or USA based on which flag was selected
+        const selectedCountry = localStorage.getItem('selectedCountry');
+        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
       } else if (countryCode === '+52') {
         userCountry = 'mexico';
       }
       
-      // Format country code - remove any + and non-digits
-      const countryDigits = formattedCountryCode.replace(/\D/g, '');
+      // Combine country code with phone digits (don't add another + sign)
+      const fullWhatsappNumber = `${formattedCountryCode}${phoneDigits}`;
       
-      // Combine with + at the beginning
-      const fullWhatsappNumber = `+${countryDigits}${phoneDigits}`;
-      
-      // Validate that there is at least 1 digit for a phone number
+      // Less restrictive validation
       if (phoneDigits.length < 1) {
         throw new Error('Please enter a valid phone number');
       }

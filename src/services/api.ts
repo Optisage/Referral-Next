@@ -146,9 +146,16 @@ export async function verifyOtp(
     
     console.log('Making verify OTP API call with phone:', formattedPhone);
     
-    // Allow any OTP in development mode, or the mock OTP in production
-    if (process.env.NODE_ENV === 'development' || otp === MOCK_OTP) {
-      console.log('Development mode or mock OTP - bypassing actual API verification');
+    // Always bypass API call in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode - bypassing actual API verification');
+      // Make sure we keep the country code in the response
+      return generateMockResponse(phone);
+    }
+    
+    // Use mock OTP in production
+    if (otp === MOCK_OTP) {
+      console.log('Using mock OTP - bypassing actual API verification');
       return generateMockResponse(formattedPhone);
     }
     
@@ -206,7 +213,8 @@ export async function loginWithOtp(
       return {
         status: 200,
         message: 'OTP sent successfully',
-        data: { phone: formattedPhone },
+        // Keep original phone intact to preserve country code
+        data: { phone: phone },
         meta: []
       };
     }

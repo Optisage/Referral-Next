@@ -8,7 +8,7 @@ const COUNTRY_CODES = [
   { name: 'Nigeria', code: 'NG', dialCode: '+234', flag: '🇳🇬' },
   { name: 'Ghana', code: 'GH', dialCode: '+233', flag: '🇬🇭' },
   { name: 'USA', code: 'US', dialCode: '+1', flag: '🇺🇸' },
-  { name: 'Canada', code: 'CA', dialCode: '+1CA', flag: '🇨🇦' },
+  { name: 'Canada', code: 'CA', dialCode: '+1', flag: '🇨🇦' },
   { name: 'Mexico', code: 'MX', dialCode: '+52', flag: '🇲🇽' }
 ];
 
@@ -31,6 +31,13 @@ export default function CountryCodeSelect({
   
   // Get the current country from the value prop
   const currentCountry = COUNTRY_CODES.find(c => c.dialCode === value) || COUNTRY_CODES[0];
+
+  // Initialize the selected country in localStorage if it doesn't exist
+  React.useEffect(() => {
+    if (currentCountry) {
+      localStorage.setItem('selectedCountry', currentCountry.code);
+    }
+  }, [currentCountry]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPhone = e.target.value;
@@ -80,6 +87,8 @@ export default function CountryCodeSelect({
                     onClick={() => {
                       onChange(country.dialCode);
                       setIsOpen(false);
+                      // Store the country code in localStorage to differentiate between countries with same dial code
+                      localStorage.setItem('selectedCountry', country.code);
                     }}
                   >
                     <span className="mr-2">{country.flag}</span>

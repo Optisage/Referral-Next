@@ -72,11 +72,22 @@ export default function Register() {
 
       // Handle special case for Canada's country code (replace +1CA with +1)
       let formattedCountryCode = countryCode;
-      if (formattedCountryCode === '+1CA') {
-        formattedCountryCode = '+1';
+      let userCountry = 'nigeria'; // Default country
+      
+      // Determine country based on country code
+      if (countryCode === '+234') {
+        userCountry = 'nigeria';
+      } else if (countryCode === '+233') {
+        userCountry = 'ghana';
+      } else if (countryCode === '+1') {
+        // Determine if Canada or USA based on which flag was selected
+        const selectedCountry = localStorage.getItem('selectedCountry');
+        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
+      } else if (countryCode === '+52') {
+        userCountry = 'mexico';
       }
 
-      // Combine country code with phone number (remove any potential + from the whatsappNumber)
+      // Combine country code with phone number - keep as is, don't standardize
       const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
       const fullWhatsappNumber = formattedCountryCode + cleanPhone;
       
@@ -167,20 +178,19 @@ export default function Register() {
         userCountry = 'nigeria';
       } else if (countryCode === '+233') {
         userCountry = 'ghana';
-      } else if (countryCode === '+1CA') {
-        userCountry = 'canada';
-        formattedCountryCode = '+1';
       } else if (countryCode === '+1') {
-        userCountry = 'usa';
+        // Determine if Canada or USA based on which flag was selected
+        const selectedCountry = localStorage.getItem('selectedCountry');
+        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
       } else if (countryCode === '+52') {
         userCountry = 'mexico';
       }
       
-      // Combine country code with phone number (remove any potential + from the whatsappNumber)
+      // Combine country code with phone number - keep as is, don't standardize
       const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
       const fullWhatsappNumber = formattedCountryCode + cleanPhone;
       
-      // Less restrictive validation - just check that there's something after the country code
+      // Less restrictive validation
       if (cleanPhone.length < 1) {
         throw new Error('Please enter a valid phone number');
       }
