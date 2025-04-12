@@ -39,7 +39,7 @@ interface WithdrawalHistoryItem {
   id: string;
   amount: number;
   date: Date;
-  paymentMethod: 'Bank Transfer' | 'Mobile Money';
+  paymentMethod: 'Bank Transfer' | 'Mobile Money' | 'Interac e-Transfer';
   country: CountryKey;
   reference: string;
 }
@@ -69,12 +69,13 @@ export default function Withdrawal() {
   
   const [country, setCountry] = useState<CountryKey>('usa');
   const [amount, setAmount] = useState<string>('');
-  const [withdrawalMethod, setWithdrawalMethod] = useState<'bank'>('bank');
+  const [withdrawalMethod, setWithdrawalMethod] = useState<'bank' | 'interac'>('bank');
   const [accountNumber, setAccountNumber] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
   const [bankName, setBankName] = useState<string>('');
   const [sortCode, setSortCode] = useState<string>('');
   const [calculatorPoints, setCalculatorPoints] = useState<string>('');
+  const [interacEmail, setInteracEmail] = useState<string>('');
   
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -124,6 +125,14 @@ export default function Withdrawal() {
       paymentMethod: 'Bank Transfer', 
       country: 'mexico',
       reference: 'REF9273461'
+    },
+    { 
+      id: 'with-4', 
+      amount: 1000 * COUNTRY_CURRENCY_MAP['canada'].rate, 
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), 
+      paymentMethod: 'Interac e-Transfer', 
+      country: 'canada',
+      reference: 'REF5247896'
     },
   ];
 
@@ -177,21 +186,30 @@ export default function Withdrawal() {
       return;
     }
     
-    // Validate sort code and account number are numeric
-    if (!isNumeric(sortCode)) {
-      setError('Sort code must contain only numbers');
-      return;
-    }
-    
-    if (!isNumeric(accountNumber)) {
-      setError('Account number must contain only numbers');
-      return;
-    }
-    
-    // Validate withdrawal method fields
-    if (!bankName || !accountNumber || !accountName || !sortCode) {
-      setError('Please fill all bank account details');
-      return;
+    // Validate based on withdrawal method
+    if (withdrawalMethod === 'bank') {
+      // Validate sort code and account number are numeric
+      if (!isNumeric(sortCode)) {
+        setError('Sort code must contain only numbers');
+        return;
+      }
+      
+      if (!isNumeric(accountNumber)) {
+        setError('Account number must contain only numbers');
+        return;
+      }
+      
+      // Validate withdrawal method fields
+      if (!bankName || !accountNumber || !accountName || !sortCode) {
+        setError('Please fill all bank account details');
+        return;
+      }
+    } else if (withdrawalMethod === 'interac') {
+      // Validate email format for Interac
+      if (!interacEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(interacEmail)) {
+        setError('Please enter a valid email address for Interac transfer');
+        return;
+      }
     }
     
     try {
@@ -387,81 +405,123 @@ export default function Withdrawal() {
                         type="radio"
                         name="withdrawalMethod"
                         value="bank"
-                        checked={true}
+                        checked={withdrawalMethod === 'bank'}
+                        onChange={() => setWithdrawalMethod('bank')}
                         className={styles.h4}
-                        readOnly
                       />
                       <label htmlFor="bank" className={styles.ml2}>
                         Bank Transfer
                       </label>
                     </div>
+                    
+                    {country === 'canada' && (
+                      <div className={styles.flexItems}>
+                        <input
+                          id="interac"
+                          type="radio"
+                          name="withdrawalMethod"
+                          value="interac"
+                          checked={withdrawalMethod === 'interac'}
+                          onChange={() => setWithdrawalMethod('interac')}
+                          className={styles.h4}
+                        />
+                        <label htmlFor="interac" className={styles.ml2}>
+                          Interac e-Transfer
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
                 {/* Bank Transfer Details */}
-                <div className={styles.border}>
-                  <div>
-                    <label htmlFor="bankName" className={styles.label}>
-                      Bank Name
-                    </label>
-                    <input
-                      id="bankName"
-                      type="text"
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className={styles.inputField}
-                      required
-                    />
+                {withdrawalMethod === 'bank' && (
+                  <div className={styles.border}>
+                    <div>
+                      <label htmlFor="bankName" className={styles.label}>
+                        Bank Name
+                      </label>
+                      <input
+                        id="bankName"
+                        type="text"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        className={styles.inputField}
+                        required={withdrawalMethod === 'bank'}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="sortCode" className={styles.label}>
+                        Sort Code
+                      </label>
+                      <input
+                        id="sortCode"
+                        type="text"
+                        value={sortCode}
+                        onChange={handleSortCodeChange}
+                        className={styles.inputField}
+                        placeholder="Enter numeric sort code"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        required={withdrawalMethod === 'bank'}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="accountNumber" className={styles.label}>
+                        Account Number
+                      </label>
+                      <input
+                        id="accountNumber"
+                        type="text"
+                        value={accountNumber}
+                        onChange={handleAccountNumberChange}
+                        className={styles.inputField}
+                        placeholder="Enter numeric account number"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        required={withdrawalMethod === 'bank'}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="accountName" className={styles.label}>
+                        Account Name
+                      </label>
+                      <input
+                        id="accountName"
+                        type="text"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        className={styles.inputField}
+                        required={withdrawalMethod === 'bank'}
+                      />
+                    </div>
                   </div>
-                  
-                  <div>
-                    <label htmlFor="sortCode" className={styles.label}>
-                      Sort Code
-                    </label>
-                    <input
-                      id="sortCode"
-                      type="text"
-                      value={sortCode}
-                      onChange={handleSortCodeChange}
-                      className={styles.inputField}
-                      placeholder="Enter numeric sort code"
-                      pattern="[0-9]*"
-                      inputMode="numeric"
-                      required
-                    />
+                )}
+                
+                {/* Interac e-Transfer Details (for Canada) */}
+                {withdrawalMethod === 'interac' && country === 'canada' && (
+                  <div className={styles.border}>
+                    <div>
+                      <label htmlFor="interacEmail" className={styles.label}>
+                        Email Address for Interac e-Transfer
+                      </label>
+                      <input
+                        id="interacEmail"
+                        type="email"
+                        value={interacEmail}
+                        onChange={(e) => setInteracEmail(e.target.value)}
+                        className={styles.inputField}
+                        placeholder="Enter your email address"
+                        required={withdrawalMethod === 'interac'}
+                      />
+                      <p className={styles.opacity75}>
+                        We'll send your funds to this email address via Interac e-Transfer
+                      </p>
+                    </div>
                   </div>
-                  
-                  <div>
-                    <label htmlFor="accountNumber" className={styles.label}>
-                      Account Number
-                    </label>
-                    <input
-                      id="accountNumber"
-                      type="text"
-                      value={accountNumber}
-                      onChange={handleAccountNumberChange}
-                      className={styles.inputField}
-                      placeholder="Enter numeric account number"
-                      pattern="[0-9]*"
-                      inputMode="numeric"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="accountName" className={styles.label}>
-                      Account Name
-                    </label>
-                    <input
-                      id="accountName"
-                      type="text"
-                      value={accountName}
-                      onChange={(e) => setAccountName(e.target.value)}
-                      className={styles.inputField}
-                      required
-                    />
-                  </div>
-                </div>
+                )}
                 
                 <div>
                   <button type="submit" className={styles.btnPrimary}>
