@@ -70,12 +70,18 @@ export default function Register() {
         throw new Error('WhatsApp number is required');
       }
 
+      // Handle special case for Canada's country code (replace +1CA with +1)
+      let formattedCountryCode = countryCode;
+      if (formattedCountryCode === '+1CA') {
+        formattedCountryCode = '+1';
+      }
+
       // Combine country code with phone number (remove any potential + from the whatsappNumber)
       const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
-      const fullWhatsappNumber = countryCode + cleanPhone;
+      const fullWhatsappNumber = formattedCountryCode + cleanPhone;
       
       // Less restrictive validation - just check that there's something after the country code
-      if (cleanPhone.length < 3) {
+      if (cleanPhone.length < 1) {
         throw new Error('Please enter a valid phone number');
       }
 
@@ -152,12 +158,30 @@ export default function Register() {
         throw new Error('WhatsApp number is required');
       }
 
+      // Handle special case for Canada's country code (replace +1CA with +1)
+      let formattedCountryCode = countryCode;
+      let userCountry = 'nigeria'; // Default country
+      
+      // Determine country based on country code
+      if (countryCode === '+234') {
+        userCountry = 'nigeria';
+      } else if (countryCode === '+233') {
+        userCountry = 'ghana';
+      } else if (countryCode === '+1CA') {
+        userCountry = 'canada';
+        formattedCountryCode = '+1';
+      } else if (countryCode === '+1') {
+        userCountry = 'usa';
+      } else if (countryCode === '+52') {
+        userCountry = 'mexico';
+      }
+      
       // Combine country code with phone number (remove any potential + from the whatsappNumber)
       const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
-      const fullWhatsappNumber = countryCode + cleanPhone;
+      const fullWhatsappNumber = formattedCountryCode + cleanPhone;
       
       // Less restrictive validation - just check that there's something after the country code
-      if (cleanPhone.length < 3) {
+      if (cleanPhone.length < 1) {
         throw new Error('Please enter a valid phone number');
       }
 
@@ -169,19 +193,27 @@ export default function Register() {
       if (response.status === 200) {
         // Store user data and token in local storage or auth context
         const { token, user } = response.data;
+        
+        // Add country to user data
+        const userData = {
+          ...user,
+          country: userCountry
+        };
+        
         localStorage.setItem('authToken', token);
-        localStorage.setItem('userData', JSON.stringify(user));
+        localStorage.setItem('userData', JSON.stringify(userData));
         
         // Call AuthContext register to ensure context is updated
         await authRegister({
           fullName: fullName,
           email: email || user.email,
           whatsappNumber: fullWhatsappNumber,
-          whatsappChannelName: whatsappChannelName
+          whatsappChannelName: whatsappChannelName,
+          country: userCountry
         });
         
         // Show success notification instead of modal
-        setUserData(user);
+        setUserData(userData);
         setShowNotification(true);
         
         // Start redirect timer

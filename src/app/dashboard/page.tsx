@@ -34,6 +34,24 @@ const CURRENCY_MAP = {
     symbol: 'R',
     name: 'South African Rand',
     rate: 0.11 // 1 NGN = 0.11 ZAR
+  },
+  usa: {
+    code: 'USD',
+    symbol: '$',
+    name: 'US Dollar',
+    rate: 0.0007 // Conversion rate from NGN
+  },
+  canada: {
+    code: 'CAD',
+    symbol: 'C$',
+    name: 'Canadian Dollar',
+    rate: 0.00095 // Conversion rate from NGN
+  },
+  mexico: {
+    code: 'MXN',
+    symbol: 'MX$',
+    name: 'Mexican Peso',
+    rate: 0.012 // Conversion rate from NGN
   }
 };
 
@@ -61,9 +79,9 @@ export default function Dashboard() {
   const { stats, referrals, copyReferralLink, isLoading } = useReferral();
   const [copied, setCopied] = useState(false);
   
-  // Get user's currency based on their WhatsApp number
-  const userCountry = user ? getCountryFromPhoneNumber(user.whatsappNumber) : 'nigeria';
-  const currency = CURRENCY_MAP[userCountry as keyof typeof CURRENCY_MAP];
+  // Get user's currency based on their country or fallback to phone detection
+  const userCountry = user?.country || (user ? getCountryFromPhoneNumber(user.whatsappNumber) : 'nigeria');
+  const currency = CURRENCY_MAP[userCountry as keyof typeof CURRENCY_MAP] || CURRENCY_MAP.nigeria;
   
   // Points to cash conversion - use totalAmount from API if available
   const POINTS_TO_CASH_RATE = 100; // 1 point = ₦100 (base in Naira)

@@ -58,14 +58,20 @@ export default function Login() {
       // Remove leading zeros that might come from user input
       phoneDigits = phoneDigits.replace(/^0+/, '');
       
+      // Handle special case for Canada's country code (replace +1CA with +1)
+      let formattedCountryCode = countryCode;
+      if (formattedCountryCode === '+1CA') {
+        formattedCountryCode = '+1';
+      }
+      
       // Format country code - remove any + and non-digits
-      const countryDigits = countryCode.replace(/\D/g, '');
+      const countryDigits = formattedCountryCode.replace(/\D/g, '');
       
       // Combine with + at the beginning
       const fullWhatsappNumber = `+${countryDigits}${phoneDigits}`;
       
-      // Validate that we have enough digits for a phone number
-      if (phoneDigits.length < 3) {
+      // Validate that there is at least 1 digit for a phone number
+      if (phoneDigits.length < 1) {
         throw new Error('Please enter a valid phone number');
       }
 
@@ -153,14 +159,32 @@ export default function Login() {
       // Remove leading zeros that might come from user input
       phoneDigits = phoneDigits.replace(/^0+/, '');
       
+      // Handle special case for Canada's country code (replace +1CA with +1)
+      let formattedCountryCode = countryCode;
+      let userCountry = 'nigeria'; // Default country
+      
+      // Determine country based on country code
+      if (countryCode === '+234') {
+        userCountry = 'nigeria';
+      } else if (countryCode === '+233') {
+        userCountry = 'ghana';
+      } else if (countryCode === '+1CA') {
+        userCountry = 'canada';
+        formattedCountryCode = '+1';
+      } else if (countryCode === '+1') {
+        userCountry = 'usa';
+      } else if (countryCode === '+52') {
+        userCountry = 'mexico';
+      }
+      
       // Format country code - remove any + and non-digits
-      const countryDigits = countryCode.replace(/\D/g, '');
+      const countryDigits = formattedCountryCode.replace(/\D/g, '');
       
       // Combine with + at the beginning
       const fullWhatsappNumber = `+${countryDigits}${phoneDigits}`;
       
-      // Validate that we have enough digits for a phone number
-      if (phoneDigits.length < 3) {
+      // Validate that there is at least 1 digit for a phone number
+      if (phoneDigits.length < 1) {
         throw new Error('Please enter a valid phone number');
       }
       
@@ -174,14 +198,21 @@ export default function Login() {
       if (response.status === 200) {
         // Store user data and token in local storage
         const { token, user } = response.data;
+        
+        // Add country to user data
+        const userData = {
+          ...user,
+          country: userCountry
+        };
+        
         localStorage.setItem('authToken', token);
-        localStorage.setItem('userData', JSON.stringify(user));
+        localStorage.setItem('userData', JSON.stringify(userData));
         
         // Important: Call login from AuthContext to ensure user state is updated
         await login(user.email || "", otpValue, fullWhatsappNumber);
         
         // Update state for success notification
-        setUserData(user);
+        setUserData(userData);
         setShowNotification(true);
         
         // Start redirect timer
