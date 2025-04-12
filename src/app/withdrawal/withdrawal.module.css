@@ -1,0 +1,424 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 2rem 1rem;
+  }
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .header {
+    margin-bottom: 2rem;
+  }
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 1.875rem;
+  }
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.successAlert {
+  background-color: #ecfdf5;
+  border: 1px solid #d1fae5;
+  color: #047857;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.alertContent {
+  display: flex;
+  align-items: center;
+}
+
+.alertIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.alertSubtext {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.errorAlert {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.sideCards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+.pointsCard {
+  composes: card;
+  background-color: rgba(37, 211, 102, 0.1);
+}
+
+.cashCard {
+  composes: card;
+  background-color: #075E54;
+  color: white;
+}
+
+.calculatorCard {
+  composes: card;
+  border: 1px solid rgba(37, 211, 102, 0.3);
+}
+
+.formCard {
+  composes: card;
+}
+
+.historyCard {
+  composes: card;
+}
+
+.historyCard .cardHeader {
+  margin-bottom: 0.5rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.headerIcon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 0.5rem;
+  color: #075E54;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.text4xl {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #075E54;
+}
+
+.cashCard .text4xl {
+  color: white;
+}
+
+.flexItems {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+}
+
+.opacity75 {
+  opacity: 0.75;
+}
+
+.spacey4 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.inputField {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+}
+
+.bgGray50 {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.flexJustifyBetween {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.textGray800 {
+  color: #1f2937;
+}
+
+.textWhatappDarkGreen {
+  color: #075E54;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.textXl {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.5rem;
+}
+
+.flexSpaceX4 {
+  display: flex;
+  gap: 1rem;
+}
+
+.h4 {
+  height: 1rem;
+  width: 1rem;
+}
+
+.ml2 {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.border {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btnPrimary {
+  width: 100%;
+  background-color: #075E54;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.btnPrimary:hover {
+  background-color: rgba(7, 94, 84, 0.9);
+}
+
+.h5 {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.overflowHidden {
+  overflow-x: auto;
+}
+
+.minWFull {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.bgGray50 {
+  background-color: #f9fafb;
+}
+
+.bgGray50 th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .bgGray50 th {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+.bgWhite {
+  background-color: white;
+}
+
+.px6 {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .px6 {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+.px2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.inlineFlex {
+  display: inline-flex;
+}
+
+.textXs {
+  font-size: 0.75rem;
+}
+
+.leading5 {
+  line-height: 1.25rem;
+}
+
+.fontSemibold {
+  font-weight: 600;
+}
+
+.roundedFull {
+  border-radius: 9999px;
+}
+
+.bgGreen100 {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.bgYellow100 {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .contentGrid {
+    grid-template-columns: 1fr 2fr;
+  }
+  
+  .historyCard {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Mobile Card View for Withdrawal History */
+.withdrawalMobileCards {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .withdrawalMobileCards {
+    display: none;
+  }
+}
+
+.withdrawalMobileTable {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .withdrawalMobileTable {
+    display: table;
+    width: 100%;
+  }
+}
+
+.withdrawalCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: white;
+}
+
+.withdrawalCardRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.withdrawalCardRow:last-child {
+  border-bottom: none;
+}
+
+.withdrawalCardLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.withdrawalCardValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: right;
+} 

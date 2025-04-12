@@ -73,9 +73,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         email,
         whatsappNumber,
         whatsappChannelName: 'Test Channel',
-        referralLink: `https://optsage.com/ref/123456`,
+        referralLink: `https://optisage.com/ref/123456`,
       };
       
+      // If we already have a user in localStorage from API verification (mock),
+      // use that instead of creating a new one
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          // Convert API user to our user format
+          const apiUser: User = {
+            id: parsedUser.id.toString(),
+            fullName: `${parsedUser.first_name} ${parsedUser.last_name}`,
+            email: parsedUser.email,
+            whatsappNumber: parsedUser.phone,
+            whatsappChannelName: parsedUser.group_name,
+            referralLink: `https://optisage.com/ref/${parsedUser.id}`,
+          };
+          setUser(apiUser);
+          // Store our user format too for context persistence
+          localStorage.setItem('user', JSON.stringify(apiUser));
+          return;
+        } catch (e) {
+          console.error("Failed to parse user data", e);
+        }
+      }
+      
+      // If no API user was found, use the mock user
       setUser(mockUser);
       // Safe localStorage access
       if (typeof window !== 'undefined') {
@@ -98,6 +123,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Safe localStorage access
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
       }
     } finally {
       setLoggingOut(false);
@@ -109,6 +136,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // The identifier can be either an email or whatsapp number
     // For demo, we'll accept any OTP
     console.log(`Verifying OTP for ${identifier}`);
+    // Mock verification - consider the verification successful
     return true;
   }, []);
 
@@ -126,6 +154,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // In a real app, this would make an API call to register the user
       // For demo, we'll simulate a successful registration
+      
+      // If we already have a user in localStorage from API registration (mock),
+      // use that instead of creating a new one
+      const apiUserData = localStorage.getItem('userData');
+      if (apiUserData) {
+        try {
+          const parsedUser = JSON.parse(apiUserData);
+          // Convert API user to our user format
+          const apiUser: User = {
+            id: parsedUser.id.toString(),
+            fullName: `${parsedUser.first_name} ${parsedUser.last_name}`,
+            email: parsedUser.email,
+            whatsappNumber: parsedUser.phone,
+            whatsappChannelName: parsedUser.group_name,
+            referralLink: `https://optsage.com/ref/${parsedUser.id}`,
+          };
+          setUser(apiUser);
+          // Store our user format too for context persistence
+          localStorage.setItem('user', JSON.stringify(apiUser));
+          return;
+        } catch (e) {
+          console.error("Failed to parse user data", e);
+        }
+      }
+      
+      // If no API user was found, use mock data
       const mockUser: User = {
         id: '123456',
         ...userData,

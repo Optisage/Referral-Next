@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --whatsapp-dark-green: #075E54;
+  --whatsapp-light-green: #25D366;
+  --whatsapp-blue: #34B7F1;
+  --whatsapp-teal: #128C7E;
+  --max-width: 1280px;
+}
+
+html, body {
+  min-height: 100vh;
+  background-color: #f7f7f7;
+}
+
+/* Common Card Styles */
+.card {
+  @apply bg-white rounded-lg shadow p-6;
+}
+
+/* Form Input Styles */
+.input-field {
+  @apply border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent;
+}
+
+/* Button Styles */
+.btn-primary {
+  @apply bg-whatsapp-dark-green text-white font-medium py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-whatsapp-light-green focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed;
+}
+
+/* Loading animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* CSS fixes for various pages */
+@media (min-width: 768px) {
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .md\:col-span-2 {
+    grid-column: span 2 / span 2;
+  }
+  
+  .md\:flex-row {
+    flex-direction: row;
+  }
+  
+  .md\:w-1\/4 {
+    width: 25%;
+  }
+  
+  .md\:w-3\/4 {
+    width: 75%;
+  }
+}
+
+/* Phone Input Styling */
+.phone-input-container {
+  --input-height: 42px;
+}
+
+.phone-input-container button,
+.phone-input-container input {
+  height: var(--input-height) !important;
+  box-sizing: border-box;
+}
+
+.phone-input-container button {
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-input-container input {
+  padding-top: 0;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
+}

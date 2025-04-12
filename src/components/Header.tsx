@@ -14,6 +14,12 @@ export default function Header() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  
+  // Don't show header on auth pages
+  const isAuthPage = pathname?.startsWith('/auth');
+  if (isAuthPage) {
+    return null;
+  }
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -67,7 +73,7 @@ export default function Header() {
               >
                 <Image 
                   src="/Optisage-Log0-white.svg" 
-                  alt="OptSage Logo" 
+                  alt="optisage Logo" 
                   width={50} 
                   height={50}
                   priority

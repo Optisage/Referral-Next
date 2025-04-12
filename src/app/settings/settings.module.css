@@ -1,0 +1,223 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.successAlert {
+  background-color: #ecfdf5;
+  border: 1px solid #d1fae5;
+  color: #047857;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebar {
+  width: 100%;
+}
+
+.mainContent {
+  width: 100%;
+}
+
+.sidebarCard {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.sidebarHeader {
+  background-color: #075E54;
+  color: white;
+  padding: 1rem;
+}
+
+.sidebarTitle {
+  font-weight: 700;
+}
+
+.sidebarNav {
+  padding: 0.5rem;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s;
+}
+
+.activeNavButton {
+  background-color: rgba(37, 211, 102, 0.1);
+  color: #075E54;
+}
+
+.navButton:not(.activeNavButton) {
+  color: #374151;
+}
+
+.navButton:not(.activeNavButton):hover {
+  background-color: #f3f4f6;
+}
+
+.navIcon {
+  margin-right: 0.5rem;
+}
+
+.contentCard {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+}
+
+.contentTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #075E54;
+  box-shadow: 0 0 0 2px rgba(7, 94, 84, 0.2);
+}
+
+.submitButton {
+  background-color: #075E54;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.submitButton:hover {
+  background-color: rgba(7, 94, 84, 0.9);
+}
+
+.formIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  color: #9ca3af;
+}
+
+.formText {
+  font-weight: 500;
+}
+
+.formCheckbox {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.formCheckboxIndicator {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  transition: all 0.2s;
+}
+
+.formCheckboxIndicator::after {
+  content: '';
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.2s;
+  border: 1px solid #d1d5db;
+}
+
+input:checked + .formCheckboxIndicator {
+  background-color: #075E54;
+}
+
+input:checked + .formCheckboxIndicator::after {
+  transform: translateX(1.25rem);
+  border-color: white;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .content {
+    flex-direction: row;
+  }
+  
+  .sidebar {
+    width: 25%;
+  }
+  
+  .mainContent {
+    width: 75%;
+  }
+} 
