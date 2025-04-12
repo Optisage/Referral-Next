@@ -8,7 +8,7 @@ const COUNTRY_CODES = [
   { name: 'Nigeria', code: 'NG', dialCode: '+234', flag: '🇳🇬' },
   { name: 'Ghana', code: 'GH', dialCode: '+233', flag: '🇬🇭' },
   { name: 'USA', code: 'US', dialCode: '+1', flag: '🇺🇸' },
-  { name: 'Canada', code: 'CA', dialCode: '+1', flag: '🇨🇦' },
+  { name: 'Canada', code: 'CA', dialCode: '+1CA', flag: '🇨🇦' },
   { name: 'Mexico', code: 'MX', dialCode: '+52', flag: '🇲🇽' }
 ];
 
