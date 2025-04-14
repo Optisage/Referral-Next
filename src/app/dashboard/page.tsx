@@ -11,66 +11,17 @@ import Preloader from '@/components/Preloader';
 
 // Define currency data for different countries
 const CURRENCY_MAP = {
-  nigeria: {
-    code: 'NGN',
-    symbol: '₦',
-    name: 'Nigerian Naira',
-    rate: 1 // Base currency
-  },
-  ghana: {
-    code: 'GHS',
-    symbol: '₵',
-    name: 'Ghanaian Cedi',
-    rate: 0.045 // 1 NGN = 0.045 GHS
-  },
-  kenya: {
-    code: 'KES',
-    symbol: 'KSh',
-    name: 'Kenyan Shilling',
-    rate: 0.75 // 1 NGN = 0.75 KES
-  },
-  'south-africa': {
-    code: 'ZAR',
-    symbol: 'R',
-    name: 'South African Rand',
-    rate: 0.11 // 1 NGN = 0.11 ZAR
-  },
-  usa: {
-    code: 'USD',
-    symbol: '$',
-    name: 'US Dollar',
-    rate: 0.0007 // Conversion rate from NGN
-  },
   canada: {
     code: 'CAD',
     symbol: 'C$',
     name: 'Canadian Dollar',
-    rate: 0.00095 // Conversion rate from NGN
-  },
-  mexico: {
-    code: 'MXN',
-    symbol: 'MX$',
-    name: 'Mexican Peso',
-    rate: 0.012 // Conversion rate from NGN
+    rate: 1 // Base currency
   }
 };
 
-// Function to get country from phone number
+// Function to get country from phone number - always returns 'canada'
 const getCountryFromPhoneNumber = (phoneNumber: string): string => {
-  if (!phoneNumber) return 'nigeria'; // Default
-  
-  // Simple country detection based on phone codes
-  if (phoneNumber.startsWith('+234') || phoneNumber.startsWith('234')) {
-    return 'nigeria';
-  } else if (phoneNumber.startsWith('+233') || phoneNumber.startsWith('233')) {
-    return 'ghana';
-  } else if (phoneNumber.startsWith('+254') || phoneNumber.startsWith('254')) {
-    return 'kenya';
-  } else if (phoneNumber.startsWith('+27') || phoneNumber.startsWith('27')) {
-    return 'south-africa';
-  }
-  
-  return 'nigeria'; // Default fallback
+  return 'canada'; // All users are from Canada
 };
 
 export default function Dashboard() {
@@ -79,14 +30,13 @@ export default function Dashboard() {
   const { stats, referrals, copyReferralLink, isLoading } = useReferral();
   const [copied, setCopied] = useState(false);
   
-  // Get user's currency based on their country or fallback to phone detection
-  const userCountry = user?.country || (user ? getCountryFromPhoneNumber(user.whatsappNumber) : 'nigeria');
-  const currency = CURRENCY_MAP[userCountry as keyof typeof CURRENCY_MAP] || CURRENCY_MAP.nigeria;
+  // All users are from Canada
+  const userCountry = 'canada';
+  const currency = CURRENCY_MAP.canada;
   
   // Points to cash conversion - use totalAmount from API if available
-  const POINTS_TO_CASH_RATE = 100; // 1 point = ₦100 (base in Naira)
-  const totalCashValueNGN = stats.totalAmount || (stats.totalPoints * POINTS_TO_CASH_RATE);
-  const totalCashValue = totalCashValueNGN * currency.rate;
+  const POINTS_TO_CASH_RATE = 100; // 1 point = C$100 (base in CAD)
+  const totalCashValue = stats.totalAmount || (stats.totalPoints * POINTS_TO_CASH_RATE);
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -197,11 +147,11 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-gray-500 font-medium">Total Amount ({currency.code})</p>
+            <p className="text-gray-500 font-medium">Total Amount (CAD)</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
               {currency.symbol}{totalCashValue.toLocaleString(undefined, {maximumFractionDigits: 2})}
             </h2>
-            <p className="text-xs text-gray-500 mt-1">1 point = {currency.symbol}{(POINTS_TO_CASH_RATE * currency.rate).toFixed(2)}</p>
+            <p className="text-xs text-gray-500 mt-1">1 point = {currency.symbol}{POINTS_TO_CASH_RATE.toFixed(2)} CAD</p>
           </div>
         </div>
       </div>

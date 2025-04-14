@@ -17,7 +17,7 @@ export default function Login() {
   const router = useRouter();
   
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+234'); // Default to Nigeria
+  const [countryCode, setCountryCode] = useState('+1'); // Default to Canada
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,25 +58,11 @@ export default function Login() {
       // Remove leading zeros that might come from user input
       phoneDigits = phoneDigits.replace(/^0+/, '');
       
-      // Handle special case for Canada's country code (replace +1CA with +1)
-      let formattedCountryCode = countryCode;
-      let userCountry = 'nigeria'; // Default country
-      
-      // Determine country based on country code
-      if (countryCode === '+234') {
-        userCountry = 'nigeria';
-      } else if (countryCode === '+233') {
-        userCountry = 'ghana';
-      } else if (countryCode === '+1') {
-        // Determine if Canada or USA based on which flag was selected
-        const selectedCountry = localStorage.getItem('selectedCountry');
-        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
-      } else if (countryCode === '+52') {
-        userCountry = 'mexico';
-      }
+      // All users are from Canada
+      const userCountry = 'canada';
       
       // Combine country code with phone digits (don't add another + sign)
-      const fullWhatsappNumber = `${formattedCountryCode}${phoneDigits}`;
+      const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
       
       // Less restrictive validation
       if (phoneDigits.length < 1) {
@@ -167,25 +153,11 @@ export default function Login() {
       // Remove leading zeros that might come from user input
       phoneDigits = phoneDigits.replace(/^0+/, '');
       
-      // Handle special case for Canada's country code (replace +1CA with +1)
-      let formattedCountryCode = countryCode;
-      let userCountry = 'nigeria'; // Default country
-      
-      // Determine country based on country code
-      if (countryCode === '+234') {
-        userCountry = 'nigeria';
-      } else if (countryCode === '+233') {
-        userCountry = 'ghana';
-      } else if (countryCode === '+1') {
-        // Determine if Canada or USA based on which flag was selected
-        const selectedCountry = localStorage.getItem('selectedCountry');
-        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
-      } else if (countryCode === '+52') {
-        userCountry = 'mexico';
-      }
+      // All users are from Canada
+      const userCountry = 'canada';
       
       // Combine country code with phone digits (don't add another + sign)
-      const fullWhatsappNumber = `${formattedCountryCode}${phoneDigits}`;
+      const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
       
       // Less restrictive validation
       if (phoneDigits.length < 1) {

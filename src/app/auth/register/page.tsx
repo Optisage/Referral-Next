@@ -24,7 +24,7 @@ export default function Register() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+234'); // Default to Nigeria
+  const [countryCode, setCountryCode] = useState('+1'); // Default to Canada
   const [whatsappChannelName, setWhatsappChannelName] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
@@ -70,26 +70,12 @@ export default function Register() {
         throw new Error('WhatsApp number is required');
       }
 
-      // Handle special case for Canada's country code (replace +1CA with +1)
-      let formattedCountryCode = countryCode;
-      let userCountry = 'nigeria'; // Default country
-      
-      // Determine country based on country code
-      if (countryCode === '+234') {
-        userCountry = 'nigeria';
-      } else if (countryCode === '+233') {
-        userCountry = 'ghana';
-      } else if (countryCode === '+1') {
-        // Determine if Canada or USA based on which flag was selected
-        const selectedCountry = localStorage.getItem('selectedCountry');
-        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
-      } else if (countryCode === '+52') {
-        userCountry = 'mexico';
-      }
+      // All users are from Canada
+      const userCountry = 'canada';
 
       // Combine country code with phone number - keep as is, don't standardize
       const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
-      const fullWhatsappNumber = formattedCountryCode + cleanPhone;
+      const fullWhatsappNumber = countryCode + cleanPhone;
       
       // Less restrictive validation - just check that there's something after the country code
       if (cleanPhone.length < 1) {
@@ -169,26 +155,12 @@ export default function Register() {
         throw new Error('WhatsApp number is required');
       }
 
-      // Handle special case for Canada's country code (replace +1CA with +1)
-      let formattedCountryCode = countryCode;
-      let userCountry = 'nigeria'; // Default country
-      
-      // Determine country based on country code
-      if (countryCode === '+234') {
-        userCountry = 'nigeria';
-      } else if (countryCode === '+233') {
-        userCountry = 'ghana';
-      } else if (countryCode === '+1') {
-        // Determine if Canada or USA based on which flag was selected
-        const selectedCountry = localStorage.getItem('selectedCountry');
-        userCountry = selectedCountry === 'CA' ? 'canada' : 'usa';
-      } else if (countryCode === '+52') {
-        userCountry = 'mexico';
-      }
+      // All users are from Canada
+      const userCountry = 'canada';
       
       // Combine country code with phone number - keep as is, don't standardize
       const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
-      const fullWhatsappNumber = formattedCountryCode + cleanPhone;
+      const fullWhatsappNumber = countryCode + cleanPhone;
       
       // Less restrictive validation
       if (cleanPhone.length < 1) {

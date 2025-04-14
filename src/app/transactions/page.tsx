@@ -8,6 +8,13 @@ import { FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp } from 'react-icon
 import styles from './transactions.module.css';
 import Preloader from '@/components/Preloader';
 
+// Define currency data for the Canadian dollar
+const CURRENCY = {
+  code: 'CAD',
+  symbol: 'C$',
+  name: 'Canadian Dollar'
+};
+
 // Define transaction type
 interface Transaction {
   id: string;
@@ -65,7 +72,7 @@ export default function Transactions() {
         id: `trans-${i}`,
         userId: `user-${i % 5 + 1}`,
         userName: `User ${i % 5 + 1}`,
-        amount: Math.floor(Math.random() * 200) + 50,
+        amount: Math.floor(Math.random() * 200) + 100, // C$100-C$300 range
         date: new Date(Date.now() - Math.floor(Math.random() * 60 * 24) * 60 * 60 * 1000),
         status,
         pointsEarned: status === 'completed' ? (Math.floor(Math.random() * 5) + 1) * 10 : 0,
@@ -212,7 +219,7 @@ export default function Transactions() {
                     <span className={styles.cardValue}>
                       {transaction.status === 'pending' ? 
                         'Pending' : 
-                        `₦${transaction.amount.toLocaleString()}`}
+                        `${CURRENCY.symbol}${transaction.amount.toLocaleString()}`}
                     </span>
                   </div>
                   <div className={styles.cardRow}>
@@ -323,7 +330,7 @@ export default function Transactions() {
                       <div className={styles.cellContent}>
                         {transaction.status === 'pending' ? 
                           '—' : 
-                          `₦${transaction.amount.toLocaleString()}`}
+                          `${CURRENCY.symbol}${transaction.amount.toLocaleString()}`}
                       </div>
                     </td>
                     <td className={styles.tableCell}>
