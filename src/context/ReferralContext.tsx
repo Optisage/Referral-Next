@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
+import { getDashboardAnalytics, AnalyticsMetric } from '@/services/api';
 
 interface Referral {
   id: string;
@@ -27,14 +28,17 @@ interface ReferralStats {
   growthRateReferrals: number;
   growthRatePoints: number;
   growthRateConversion: number;
+  totalAmount: number;
 }
 
 interface ReferralContextType {
   referrals: Referral[];
   transactions: Transaction[];
   stats: ReferralStats;
+  isLoading: boolean;
   copyReferralLink: () => void;
   generateReferralLink: (userId: string) => string;
+  fetchStats: () => Promise<void>;
 }
 
 const ReferralContext = createContext<ReferralContextType | undefined>(undefined);
@@ -52,6 +56,18 @@ interface ReferralProviderProps {
 }
 
 export const ReferralProvider = ({ children }: ReferralProviderProps) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // Default stats
+  const [stats, setStats] = useState<ReferralStats>({
+    totalReferrals: 0,
+    totalPoints: 0,
+    conversionRate: 0,
+    growthRateReferrals: 0,
+    growthRatePoints: 0,
+    growthRateConversion: 0,
+    totalAmount: 0,
+  });
+  
   // Mock data for the demo - using useMemo to avoid recreating on rerenders
   const referrals = useMemo<Referral[]>(() => [
     {
@@ -89,14 +105,62 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     },
   ], []);
 
-  const stats = useMemo<ReferralStats>(() => ({
-    totalReferrals: 1234,
-    totalPoints: 3567,
-    conversionRate: 32,
-    growthRateReferrals: 12,
-    growthRatePoints: 23,
-    growthRateConversion: 5,
-  }), []);
+  const fetchStats = useCallback(async (): Promise<void> => {
+    // Only fetch if we're in a browser environment
+    if (typeof window === 'undefined') return;
+    
+    try {
+      setIsLoading(true);
+      const response = await getDashboardAnalytics();
+      
+      if (response.status === 200 && response.data) {
+        // Map API response to our stats structure
+        const newStats: ReferralStats = {
+          totalReferrals: 0,
+          totalPoints: 0,
+          conversionRate: 0,
+          growthRateReferrals: 0,
+          growthRatePoints: 0,
+          growthRateConversion: 0,
+          totalAmount: 0
+        };
+        
+        // Map each metric from the API to our stats object
+        response.data.forEach((metric: AnalyticsMetric) => {
+          switch (metric.metric) {
+            case 'total referrals':
+              newStats.totalReferrals = metric.value;
+              newStats.growthRateReferrals = metric.month_growth;
+              break;
+            case 'total points':
+              newStats.totalPoints = metric.value;
+              newStats.growthRatePoints = metric.month_growth;
+              break;
+            case 'conversion rate':
+              newStats.conversionRate = metric.value;
+              newStats.growthRateConversion = metric.month_growth;
+              break;
+            case 'total amount':
+              newStats.totalAmount = metric.value;
+              // We also use this growth rate for the total amount
+              newStats.growthRatePoints = metric.month_growth;
+              break;
+          }
+        });
+        
+        setStats(newStats);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard analytics:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  // Load stats when component mounts
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const copyReferralLink = useCallback((): void => {
     const link = generateReferralLink('123456');
@@ -109,7 +173,7 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   }, []);
 
   const generateReferralLink = useCallback((userId: string): string => {
-    return `https://optsage.com/ref/${userId}`;
+    return `https://optisage.com/ref/${userId}`;
   }, []);
 
   // Using useMemo for the context value to prevent unnecessary rerenders
@@ -117,9 +181,11 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     referrals,
     transactions,
     stats,
+    isLoading,
     copyReferralLink,
     generateReferralLink,
-  }), [referrals, transactions, stats, copyReferralLink, generateReferralLink]);
+    fetchStats,
+  }), [referrals, transactions, stats, isLoading, copyReferralLink, generateReferralLink, fetchStats]);
 
   return <ReferralContext.Provider value={value}>{children}</ReferralContext.Provider>;
 }; 

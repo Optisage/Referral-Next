@@ -1,51 +1,40 @@
 'use client';
 
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useReferral } from '@/context/ReferralContext';
 import { FaMoneyBillWave, FaHistory, FaCheckCircle, FaExchangeAlt, FaStar, FaCalculator } from 'react-icons/fa';
 import styles from './withdrawal.module.css';
 import Preloader from '@/components/Preloader';
+import SlideNotification from '@/components/SlideNotification';
 
 // Define currency data for different countries
-const COUNTRY_CURRENCY_MAP = {
-  nigeria: {
-    code: 'NGN',
-    symbol: '₦',
-    name: 'Nigerian Naira',
+const CURRENCY_MAP = {
+  canada: {
+    code: 'CAD',
+    symbol: 'C$',
+    name: 'Canadian Dollar',
     rate: 1 // Base currency
-  },
-  ghana: {
-    code: 'GHS',
-    symbol: '₵',
-    name: 'Ghanaian Cedi',
-    rate: 0.045 // 1 NGN = 0.045 GHS
-  },
-  kenya: {
-    code: 'KES',
-    symbol: 'KSh',
-    name: 'Kenyan Shilling',
-    rate: 0.75 // 1 NGN = 0.75 KES
-  },
-  'south-africa': {
-    code: 'ZAR',
-    symbol: 'R',
-    name: 'South African Rand',
-    rate: 0.11 // 1 NGN = 0.11 ZAR
   }
 };
 
+// Function to get country from phone number - always returns 'canada'
+const getCountryFromPhoneNumber = (phoneNumber: string): string => {
+  return 'canada'; // All users are from Canada
+};
+
 // Define a type for the country keys
-type CountryKey = keyof typeof COUNTRY_CURRENCY_MAP;
+type CountryKey = keyof typeof CURRENCY_MAP;
 
 // Define a type for the withdrawal history items
 interface WithdrawalHistoryItem {
   id: string;
   amount: number;
   date: Date;
-  status: 'completed' | 'pending';
+  paymentMethod: 'Bank Transfer' | 'Mobile Money' | 'Interac e-Transfer';
   country: CountryKey;
+  reference: string;
 }
 
 export default function Withdrawal() {
@@ -71,121 +60,141 @@ export default function Withdrawal() {
     };
   }, [setPageLoading]);
   
-  const [country, setCountry] = useState<CountryKey>('nigeria');
+  // All users are from Canada
+  const userCountry = 'canada';
+  const currency = CURRENCY_MAP.canada;
+  
+  // Payment method state - only Interac e-Transfer is available for Canada
+  const [paymentMethod, setPaymentMethod] = useState<'interac_etransfer'>('interac_etransfer');
+  
+  // Interac e-Transfer details
+  const [email, setEmail] = useState('');
+  
   const [amount, setAmount] = useState<string>('');
-  const [withdrawalMethod, setWithdrawalMethod] = useState<'bank' | 'mobile'>('bank');
-  const [accountNumber, setAccountNumber] = useState<string>('');
-  const [accountName, setAccountName] = useState<string>('');
-  const [bankName, setBankName] = useState<string>('');
-  const [mobileNumber, setMobileNumber] = useState<string>('');
-  const [mobileProvider, setMobileProvider] = useState<string>('');
   const [calculatorPoints, setCalculatorPoints] = useState<string>('');
   
-  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [showNotification, setShowNotification] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   
   const [submitting, setSubmitting] = useState<boolean>(false);
   
-  // Get currency info based on selected country
-  const currency = COUNTRY_CURRENCY_MAP[country];
-  
   // Points to cash conversion
-  const POINTS_TO_CASH_RATE = 100; // 1 point = ₦100 (base in Naira)
+  const POINTS_TO_CASH_RATE = 100; // 1 point = C$100 (base in CAD)
   const availablePoints = stats.totalPoints;
   
-  // Calculate available balance based on country's currency
-  const availableBalanceNGN = availablePoints * POINTS_TO_CASH_RATE;
-  const availableBalance = availableBalanceNGN * currency.rate;
+  // Calculate available balance directly in CAD
+  const availableBalance = availablePoints * POINTS_TO_CASH_RATE;
   
   // Calculate converted value for calculator
   const calculatedValue = calculatorPoints ? 
-    parseFloat(calculatorPoints) * POINTS_TO_CASH_RATE * currency.rate : 0;
+    parseFloat(calculatorPoints) * POINTS_TO_CASH_RATE : 0;
   
-  // Convert min withdrawal amount to local currency
-  const minWithdrawalAmount = 500 * currency.rate;
+  // Min withdrawal amount in CAD
+  const minWithdrawalAmount = 500;
   
-  // Mock withdrawal history
-  const withdrawalHistory: WithdrawalHistoryItem[] = [
-    { id: 'with-1', amount: 2500 * COUNTRY_CURRENCY_MAP['nigeria'].rate, date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), status: 'completed', country: 'nigeria' },
-    { id: 'with-2', amount: 1500 * COUNTRY_CURRENCY_MAP['ghana'].rate, date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), status: 'completed', country: 'ghana' },
-    { id: 'with-3', amount: 500 * COUNTRY_CURRENCY_MAP['kenya'].rate, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), status: 'pending', country: 'kenya' },
-  ];
+  // Mock withdrawal history with only Canadian transactions using Interac
+  const withdrawalHistory = useMemo<WithdrawalHistoryItem[]>(() => [
+    { 
+      id: 'with-1', 
+      amount: 2500, 
+      date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), 
+      paymentMethod: 'Interac e-Transfer', 
+      country: 'canada',
+      reference: 'REF8453291'
+    },
+    { 
+      id: 'with-2', 
+      amount: 1500, 
+      date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), 
+      paymentMethod: 'Interac e-Transfer', 
+      country: 'canada',
+      reference: 'REF7125834'
+    },
+    { 
+      id: 'with-3', 
+      amount: 1000, 
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), 
+      paymentMethod: 'Interac e-Transfer', 
+      country: 'canada',
+      reference: 'REF5247896'
+    }
+  ], []);
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCountry = e.target.value as CountryKey;
-    setCountry(newCountry);
-    
     // Reset amount when changing countries
     setAmount('');
-    
-    // Reset withdrawal method to bank if mobile is not supported in the selected country
-    if (newCountry !== 'ghana' && newCountry !== 'kenya' && withdrawalMethod === 'mobile') {
-      setWithdrawalMethod('bank');
-    }
   };
   
+  // Add validation functions
+  const isNumeric = (value: string): boolean => {
+    return /^\d+$/.test(value);
+  };
+
   const handleWithdrawal = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Validate amount
-    const withdrawalAmount = parseFloat(amount);
-    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
-      setError('Please enter a valid amount');
-      return;
-    }
-    
-    if (withdrawalAmount > availableBalance) {
-      setError('Insufficient balance');
-      return;
-    }
-    
-    if (withdrawalAmount < minWithdrawalAmount) {
-      setError(`Minimum withdrawal is ${currency.symbol}${minWithdrawalAmount.toFixed(2)}`);
-      return;
-    }
-    
-    // Validate withdrawal method fields
-    if (withdrawalMethod === 'bank') {
-      if (!bankName || !accountNumber || !accountName) {
-        setError('Please fill all bank account details');
-        return;
-      }
-    } else if (withdrawalMethod === 'mobile') {
-      if (!mobileNumber || !mobileProvider) {
-        setError('Please fill all mobile money details');
-        return;
-      }
-    }
+    setSubmitting(true);
     
     try {
-      setSubmitting(true);
-      // In a real app, this would make an API call to process the withdrawal
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setShowSuccess(true);
+      // Validate amount
+      if (!amount) {
+        setError('Please enter a withdrawal amount');
+        return;
+      }
       
-      // Reset form after success
-      setTimeout(() => {
-        setShowSuccess(false);
-        setAmount('');
-        setAccountNumber('');
-        setAccountName('');
-        setBankName('');
-        setMobileNumber('');
-        setMobileProvider('');
-      }, 3000);
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        setError('Please enter a valid withdrawal amount');
+        return;
+      }
+      
+      if (parsedAmount < minWithdrawalAmount) {
+        setError(`Minimum withdrawal amount is ${currency.symbol}${minWithdrawalAmount.toLocaleString()}`);
+        return;
+      }
+      
+      if (parsedAmount > availableBalance) {
+        setError(`Withdrawal amount exceeds your available balance of ${currency.symbol}${availableBalance.toLocaleString()}`);
+        return;
+      }
+      
+      // Validate based on withdrawal method
+      if (paymentMethod === 'interac_etransfer') {
+        // Validate email format for Interac
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setError('Please enter a valid email address for Interac e-Transfer');
+          return;
+        }
+      }
+      
+      // Run full validation
+      if (!validateWithdrawalDetails()) {
+        return;
+      }
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Show success message
+      setNotificationMessage(`Withdrawal of ${currency.symbol}${parsedAmount.toLocaleString()} has been initiated via Interac e-Transfer. Please check your email at ${email} for the transfer.`);
+      setNotificationType('success');
+      setShowNotification(true);
+      
+      // Reset form
+      setAmount('');
+      setEmail('');
     } finally {
       setSubmitting(false);
     }
   };
   
-  // Calculate points required based on amount and currency
+  // Calculate points required based on amount
   const calculatePointsNeeded = (amountValue: string | undefined): number => {
     if (!amountValue) return 0;
-    // Convert local currency to NGN to calculate points
-    const amountInNGN = parseFloat(amountValue) / currency.rate;
-    return Math.ceil(amountInNGN / POINTS_TO_CASH_RATE);
+    // Direct conversion in CAD
+    const amountInCAD = parseFloat(amountValue);
+    return Math.ceil(amountInCAD / POINTS_TO_CASH_RATE);
   };
   
   // Format date
@@ -196,6 +205,66 @@ export default function Withdrawal() {
       day: 'numeric',
     }).format(date);
   };
+  
+  // Close notification handler
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+  };
+  
+  // Render payment method form based on selected method
+  const renderPaymentMethodForm = () => {
+    return (
+      <div className="mt-4 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Email Address for Interac e-Transfer</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Enter your email address"
+            required
+          />
+          <p className="mt-2 text-xs text-gray-500">
+            We'll send your funds to this email address via Interac e-Transfer
+          </p>
+        </div>
+      </div>
+    );
+  };
+  
+  // Validate withdrawal details
+  const validateWithdrawalDetails = () => {
+    let isValid = true;
+    const errors: string[] = [];
+
+    if (!amount || parseFloat(amount) <= 0) {
+      errors.push('Please enter a valid withdrawal amount');
+      isValid = false;
+    }
+
+    const numericAmount = parseFloat(amount);
+    if (numericAmount > availableBalance) {
+      errors.push(`Withdrawal amount exceeds your available balance of ${currency.symbol}${availableBalance.toLocaleString()}`);
+      isValid = false;
+    }
+
+    // Validate Interac e-Transfer details
+    if (!email.trim()) {
+      errors.push('Email address is required for Interac e-Transfer');
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Please enter a valid email address');
+      isValid = false;
+    }
+
+    setError(errors.length > 0 ? errors.join('\n') : '');
+    return isValid;
+  };
+  
+  // Define notification message states
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
   
   if (loading || !user) {
     return <Preloader fullScreen state="withdrawal" />;
@@ -208,16 +277,14 @@ export default function Withdrawal() {
         <p className={styles.subtitle}>Convert your points to cash and withdraw</p>
       </div>
       
-      {/* Success Message */}
-      {showSuccess && (
-        <div className={styles.successAlert} role="alert">
-          <div className={styles.alertContent}>
-            <FaCheckCircle className={styles.alertIcon} />
-            <span>Your withdrawal request has been submitted successfully.</span>
-          </div>
-          <p className={styles.alertSubtext}>It will be processed within 24-48 hours.</p>
-        </div>
-      )}
+      {/* Slide Notification */}
+      <SlideNotification
+        show={showNotification}
+        message={notificationMessage || `Withdrawal of ${currency.symbol}${parseFloat(amount || '0').toLocaleString()} has been processed successfully.`}
+        type={notificationType}
+        duration={5000}
+        onClose={() => setShowNotification(false)}
+      />
       
       {/* Error Message */}
       {error && (
@@ -241,7 +308,7 @@ export default function Withdrawal() {
             <div className={styles.text4xl}>{availablePoints.toLocaleString()}</div>
             <div className={styles.flexItems}>
               <FaExchangeAlt className={styles.icon} />
-              <span>1 point = {currency.symbol}{(POINTS_TO_CASH_RATE * currency.rate).toFixed(2)} {currency.code}</span>
+              <span>1 point = {currency.symbol}{POINTS_TO_CASH_RATE.toFixed(2)} {currency.code}</span>
             </div>
           </div>
           
@@ -304,15 +371,12 @@ export default function Withdrawal() {
                     Country & Currency
                   </label>
                   <select
-                    value={country}
+                    value={userCountry}
                     onChange={handleCountryChange}
                     className={styles.inputField}
                     required
                   >
-                    <option value="nigeria">Nigeria ({COUNTRY_CURRENCY_MAP.nigeria.symbol} {COUNTRY_CURRENCY_MAP.nigeria.code})</option>
-                    <option value="ghana">Ghana ({COUNTRY_CURRENCY_MAP.ghana.symbol} {COUNTRY_CURRENCY_MAP.ghana.code})</option>
-                    <option value="kenya">Kenya ({COUNTRY_CURRENCY_MAP.kenya.symbol} {COUNTRY_CURRENCY_MAP.kenya.code})</option>
-                    <option value="south-africa">South Africa ({COUNTRY_CURRENCY_MAP['south-africa'].symbol} {COUNTRY_CURRENCY_MAP['south-africa'].code})</option>
+                    <option value="canada">Canada ({CURRENCY_MAP.canada.symbol} {CURRENCY_MAP.canada.code})</option>
                   </select>
                 </div>
                 
@@ -339,139 +403,29 @@ export default function Withdrawal() {
                   </div>
                 </div>
                 
-                {/* Withdrawal Method */}
-                <div>
-                  <label className={styles.label}>
-                    Withdrawal Method
-                  </label>
-                  <div className={styles.flexSpaceX4}>
-                    <div className={styles.flexItems}>
+                {/* Payment Method */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium text-gray-900">Payment Method</h3>
+                  <p className="text-sm text-gray-500">Interac e-Transfer is the only available method for withdrawals in Canada.</p>
+                  
+                  <div className="mt-4">
+                    <div className="flex items-center">
                       <input
-                        id="bank"
+                        id="interac_etransfer"
+                        name="payment_method"
                         type="radio"
-                        name="withdrawalMethod"
-                        value="bank"
-                        checked={withdrawalMethod === 'bank'}
-                        onChange={() => setWithdrawalMethod('bank')}
-                        className={styles.h4}
+                        checked={paymentMethod === 'interac_etransfer'}
+                        className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                        readOnly
                       />
-                      <label htmlFor="bank" className={styles.ml2}>
-                        Bank Transfer
+                      <label htmlFor="interac_etransfer" className="ml-3 block text-sm font-medium text-gray-700">
+                        Interac e-Transfer ({currency.code})
                       </label>
                     </div>
-                    {(country === 'ghana' || country === 'kenya') && (
-                      <div className={styles.flexItems}>
-                        <input
-                          id="mobile"
-                          type="radio"
-                          name="withdrawalMethod"
-                          value="mobile"
-                          checked={withdrawalMethod === 'mobile'}
-                          onChange={() => setWithdrawalMethod('mobile')}
-                          className={styles.h4}
-                        />
-                        <label htmlFor="mobile" className={styles.ml2}>
-                          Mobile Money
-                        </label>
-                      </div>
-                    )}
                   </div>
+                  
+                  {renderPaymentMethodForm()}
                 </div>
-                
-                {/* Bank Transfer Details */}
-                {withdrawalMethod === 'bank' && (
-                  <div className={styles.border}>
-                    <div>
-                      <label htmlFor="bankName" className={styles.label}>
-                        Bank Name
-                      </label>
-                      <input
-                        id="bankName"
-                        type="text"
-                        value={bankName}
-                        onChange={(e) => setBankName(e.target.value)}
-                        className={styles.inputField}
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="accountNumber" className={styles.label}>
-                        Account Number
-                      </label>
-                      <input
-                        id="accountNumber"
-                        type="text"
-                        value={accountNumber}
-                        onChange={(e) => setAccountNumber(e.target.value)}
-                        className={styles.inputField}
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="accountName" className={styles.label}>
-                        Account Name
-                      </label>
-                      <input
-                        id="accountName"
-                        type="text"
-                        value={accountName}
-                        onChange={(e) => setAccountName(e.target.value)}
-                        className={styles.inputField}
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Mobile Money Details */}
-                {withdrawalMethod === 'mobile' && (
-                  <div className={styles.border}>
-                    <div>
-                      <label htmlFor="mobileProvider" className={styles.label}>
-                        Mobile Provider
-                      </label>
-                      <select
-                        id="mobileProvider"
-                        value={mobileProvider}
-                        onChange={(e) => setMobileProvider(e.target.value)}
-                        className={styles.inputField}
-                        required
-                      >
-                        <option value="">Select Provider</option>
-                        {country === 'ghana' && (
-                          <>
-                            <option value="mtn">MTN</option>
-                            <option value="vodafone">Vodafone</option>
-                            <option value="airtel-tigo">AirtelTigo</option>
-                          </>
-                        )}
-                        {country === 'kenya' && (
-                          <>
-                            <option value="mpesa">M-Pesa</option>
-                            <option value="airtel">Airtel Money</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="mobileNumber" className={styles.label}>
-                        Mobile Number
-                      </label>
-                      <input
-                        id="mobileNumber"
-                        type="tel"
-                        value={mobileNumber}
-                        onChange={(e) => setMobileNumber(e.target.value)}
-                        className={styles.inputField}
-                        placeholder="Enter your mobile money number"
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
                 
                 <div>
                   <button type="submit" className={styles.btnPrimary}>
@@ -495,7 +449,7 @@ export default function Withdrawal() {
               {/* Mobile Card View */}
               <div className={styles.withdrawalMobileCards}>
                 {withdrawalHistory.map((withdrawal) => {
-                  const currencyInfo = COUNTRY_CURRENCY_MAP[withdrawal.country];
+                  const currencyInfo = CURRENCY_MAP[withdrawal.country];
                   return (
                     <div key={withdrawal.id} className={styles.withdrawalCard}>
                       <div className={styles.withdrawalCardRow}>
@@ -513,12 +467,12 @@ export default function Withdrawal() {
                         <span className={styles.withdrawalCardValue}>{formatDate(withdrawal.date)}</span>
                       </div>
                       <div className={styles.withdrawalCardRow}>
-                        <span className={styles.withdrawalCardLabel}>Status</span>
-                        <span className={`${styles.px2} ${styles.inlineFlex} ${styles.textXs} ${styles.leading5} ${styles.fontSemibold} ${styles.roundedFull} ${
-                          withdrawal.status === 'completed' ? styles.bgGreen100 : styles.bgYellow100
-                        }`}>
-                          {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
-                        </span>
+                        <span className={styles.withdrawalCardLabel}>Payment Method</span>
+                        <span className={styles.withdrawalCardValue}>{withdrawal.paymentMethod}</span>
+                      </div>
+                      <div className={styles.withdrawalCardRow}>
+                        <span className={styles.withdrawalCardLabel}>Reference</span>
+                        <span className={styles.withdrawalCardValue}>{withdrawal.reference}</span>
                       </div>
                     </div>
                   );
@@ -539,13 +493,16 @@ export default function Withdrawal() {
                       Date
                     </th>
                     <th scope="col">
-                      Status
+                      Payment Method
+                    </th>
+                    <th scope="col">
+                      Reference
                     </th>
                   </tr>
                 </thead>
                 <tbody className={styles.bgWhite}>
                   {withdrawalHistory.map((withdrawal) => {
-                    const currencyInfo = COUNTRY_CURRENCY_MAP[withdrawal.country];
+                    const currencyInfo = CURRENCY_MAP[withdrawal.country];
                     return (
                       <tr key={withdrawal.id}>
                         <td className={styles.px6}>
@@ -558,11 +515,10 @@ export default function Withdrawal() {
                           {formatDate(withdrawal.date)}
                         </td>
                         <td className={styles.px6}>
-                          <span className={`${styles.px2} ${styles.inlineFlex} ${styles.textXs} ${styles.leading5} ${styles.fontSemibold} ${styles.roundedFull} ${
-                            withdrawal.status === 'completed' ? styles.bgGreen100 : styles.bgYellow100
-                          }`}>
-                            {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
-                          </span>
+                          {withdrawal.paymentMethod}
+                        </td>
+                        <td className={styles.px6}>
+                          {withdrawal.reference}
                         </td>
                       </tr>
                     );

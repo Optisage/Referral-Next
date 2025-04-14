@@ -11,64 +11,32 @@ import Preloader from '@/components/Preloader';
 
 // Define currency data for different countries
 const CURRENCY_MAP = {
-  nigeria: {
-    code: 'NGN',
-    symbol: '₦',
-    name: 'Nigerian Naira',
+  canada: {
+    code: 'CAD',
+    symbol: 'C$',
+    name: 'Canadian Dollar',
     rate: 1 // Base currency
-  },
-  ghana: {
-    code: 'GHS',
-    symbol: '₵',
-    name: 'Ghanaian Cedi',
-    rate: 0.045 // 1 NGN = 0.045 GHS
-  },
-  kenya: {
-    code: 'KES',
-    symbol: 'KSh',
-    name: 'Kenyan Shilling',
-    rate: 0.75 // 1 NGN = 0.75 KES
-  },
-  'south-africa': {
-    code: 'ZAR',
-    symbol: 'R',
-    name: 'South African Rand',
-    rate: 0.11 // 1 NGN = 0.11 ZAR
   }
 };
 
-// Function to get country from phone number
+// Function to get country from phone number - always returns 'canada'
 const getCountryFromPhoneNumber = (phoneNumber: string): string => {
-  if (!phoneNumber) return 'nigeria'; // Default
-  
-  // Simple country detection based on phone codes
-  if (phoneNumber.startsWith('+234') || phoneNumber.startsWith('234')) {
-    return 'nigeria';
-  } else if (phoneNumber.startsWith('+233') || phoneNumber.startsWith('233')) {
-    return 'ghana';
-  } else if (phoneNumber.startsWith('+254') || phoneNumber.startsWith('254')) {
-    return 'kenya';
-  } else if (phoneNumber.startsWith('+27') || phoneNumber.startsWith('27')) {
-    return 'south-africa';
-  }
-  
-  return 'nigeria'; // Default fallback
+  return 'canada'; // All users are from Canada
 };
 
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading, setPageLoading } = useAuth();
-  const { stats, referrals, copyReferralLink } = useReferral();
+  const { stats, referrals, copyReferralLink, isLoading } = useReferral();
   const [copied, setCopied] = useState(false);
   
-  // Get user's currency based on their WhatsApp number
-  const userCountry = user ? getCountryFromPhoneNumber(user.whatsappNumber) : 'nigeria';
-  const currency = CURRENCY_MAP[userCountry as keyof typeof CURRENCY_MAP];
+  // All users are from Canada
+  const userCountry = 'canada';
+  const currency = CURRENCY_MAP.canada;
   
-  // Points to cash conversion
-  const POINTS_TO_CASH_RATE = 100; // 1 point = ₦100 (base in Naira)
-  const totalCashValueNGN = stats.totalPoints * POINTS_TO_CASH_RATE;
-  const totalCashValue = totalCashValueNGN * currency.rate;
+  // Points to cash conversion - use totalAmount from API if available
+  const POINTS_TO_CASH_RATE = 100; // 1 point = C$100 (base in CAD)
+  const totalCashValue = stats.totalAmount || (stats.totalPoints * POINTS_TO_CASH_RATE);
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -94,7 +62,7 @@ export default function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
   
-  if (loading || !user) {
+  if (loading || !user || isLoading) {
     return <Preloader fullScreen state="dashboard" />;
   }
   
@@ -104,6 +72,12 @@ export default function Dashboard() {
         <h1 className={styles.dashboardTitle}>
           <FaChartLine className="mr-2 text-whatsapp-green" /> Admin Dashboard
         </h1>
+        <div className="flex items-center mt-2">
+          <FaWhatsapp className="mr-2 text-whatsapp-green" />
+          <p className="text-gray-600">
+            <span className="font-semibold">WhatsApp Group Name:</span> {user.whatsappChannelName}
+          </p>
+        </div>
       </div>
       
       {/* Stats Cards */}
@@ -174,10 +148,12 @@ export default function Dashboard() {
           </div>
           <div className="mt-4">
             <p className="font-medium text-gray-500">Total Amount ({currency.code})</p>
+            <p className="font-medium text-gray-500">Total Amount (CAD)</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
               {currency.symbol}{totalCashValue.toLocaleString(undefined, {maximumFractionDigits: 2})}
             </h2>
             <p className="mt-1 text-xs text-gray-500">1 point = {currency.symbol}{(POINTS_TO_CASH_RATE * currency.rate).toFixed(2)}</p>
+            <p className="mt-1 text-xs text-gray-500">1 point = {currency.symbol}{POINTS_TO_CASH_RATE.toFixed(2)} CAD</p>
           </div>
         </div>
       </div>
@@ -187,7 +163,7 @@ export default function Dashboard() {
         <h2 className={styles.sectionTitle}>
           <Image 
             src="/Optisage-Log0-white.svg" 
-            alt="OptSage Logo" 
+            alt="optisage Logo" 
             width={24} 
             height={24}
             className="mr-2" 
@@ -197,6 +173,8 @@ export default function Dashboard() {
           <input 
             type="text" 
             value={user.referralLink || 'https://optsage.com/ref/123456'}
+            className="flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent bg-gray-50"
+            value={user.referralLink || 'https://optisage.com/ref/123456'}
             className="flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent bg-gray-50"
             readOnly
           />

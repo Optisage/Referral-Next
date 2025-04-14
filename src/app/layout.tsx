@@ -10,7 +10,7 @@ import NavigationProgress from '@/components/NavigationProgress';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OptSage Referral Manager",
+  title: "optisage Referral Manager",
   description: "WhatsApp Group Referral System",
 };
 
@@ -19,6 +19,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // This is a client component so we can't use usePathname here
+  // We'll conditionally render the Header in the Header component itself
+  
   return (
     <html lang="en">
       <body className={inter.className}>

@@ -221,6 +221,18 @@
   text-align: center;
 }
 
+.formLink {
+  color: var(--whatsapp-dark-green);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.formLink:hover {
+  color: var(--whatsapp-green);
+  text-decoration: underline;
+}
+
 @media (min-width: 640px) {
   .formCard {
     padding: 2rem 2.5rem;

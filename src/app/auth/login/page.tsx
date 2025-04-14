@@ -9,17 +9,21 @@ import { FaPhone, FaExclamationCircle } from 'react-icons/fa';
 import styles from './login.module.css';
 import Preloader from '@/components/Preloader';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
+import SlideNotification from '@/components/SlideNotification';
+import { loginWithOtp, verifyOtp as apiVerifyOtp } from '@/services/api';
 
 export default function Login() {
-  const { login, sendOtp, verifyOtp, logout, loggingOut } = useAuth();
+  const { login, loggingOut } = useAuth();
   const router = useRouter();
   
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+234'); // Default to Nigeria
+  const [countryCode, setCountryCode] = useState('+1'); // Default to Canada
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showNotification, setShowNotification] = useState<boolean>(false);
+  const [userData, setUserData] = useState<any>(null);
   
   // References for the OTP input fields
   const otpRefs = [
@@ -30,31 +34,61 @@ export default function Login() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+
+  // Effect to redirect after notification is closed
+  useEffect(() => {
+    if (userData && !showNotification) {
+      // Redirect to dashboard after notification is closed or expires
+      router.push('/dashboard');
+    }
+  }, [userData, showNotification, router]);
   
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!whatsappNumber) {
-      setError('WhatsApp number is required');
-      return;
-    }
-    
     try {
+      if (!whatsappNumber || whatsappNumber.trim() === '') {
+        throw new Error('WhatsApp number is required');
+      }
+
+      // Format the phone number properly - only keep digits
+      let phoneDigits = whatsappNumber.replace(/\D/g, '');
+      
+      // Remove leading zeros that might come from user input
+      phoneDigits = phoneDigits.replace(/^0+/, '');
+      
+      // All users are from Canada
+      const userCountry = 'canada';
+      
+      // Combine country code with phone digits (don't add another + sign)
+      const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
+      
+      // Less restrictive validation
+      if (phoneDigits.length < 1) {
+        throw new Error('Please enter a valid phone number');
+      }
+
+      console.log('Sending login OTP to:', fullWhatsappNumber);
+      
       setLoading(true);
-      // For demo purposes, we'll simulate sending OTP to the phone number
-      // In a real app, this would call an API to send the OTP to the WhatsApp number
-      await sendOtp(whatsappNumber);
-      setOtpSent(true);
-      // Focus the first OTP input when OTP is sent
-      setTimeout(() => {
-        if (otpRefs[0].current) {
-          otpRefs[0].current!.focus();
-        }
-      }, 100);
+      
+      // Call the API to send OTP
+      const response = await loginWithOtp(fullWhatsappNumber);
+      
+      if (response.status === 200) {
+        setOtpSent(true);
+        // Focus the first OTP input when OTP is sent
+        setTimeout(() => {
+          if (otpRefs[0].current) {
+            otpRefs[0].current!.focus();
+          }
+        }, 100);
+      } else {
+        throw new Error(response.message || 'Failed to send OTP');
+      }
     } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-      console.error(err);
+      setError(err instanceof Error ? err.message : 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -102,36 +136,80 @@ export default function Login() {
     e.preventDefault();
     setError('');
     
-    const otpValue = otp.join('');
-    
-    if (otpValue.length !== 6) {
-      setError('Please enter all 6 digits of the OTP');
-      return;
-    }
-    
-    const fullWhatsappNumber = whatsappNumber.startsWith(countryCode) 
-      ? whatsappNumber 
-      : countryCode + whatsappNumber.replace(/^\+/, '');
-    
     try {
-      setLoading(true);
-      // For demo purposes, we'll use the existing verifyOtp function
-      // In a real app, this would verify the OTP sent to the WhatsApp number
-      const isValid = await verifyOtp(fullWhatsappNumber, otpValue);
+      const otpValue = otp.join('');
       
-      if (isValid) {
-        // Generate a mock email for the login function since we're not collecting email
-        const mockEmail = `user_${Math.floor(Math.random() * 10000)}@example.com`;
-        await login(mockEmail, otpValue, fullWhatsappNumber);
-        router.push('/dashboard');
+      if (otpValue.length !== 6) {
+        throw new Error('Please enter all 6 digits of the OTP');
+      }
+      
+      if (!whatsappNumber || whatsappNumber.trim() === '') {
+        throw new Error('WhatsApp number is required');
+      }
+      
+      // Format the phone number properly - only keep digits
+      let phoneDigits = whatsappNumber.replace(/\D/g, '');
+      
+      // Remove leading zeros that might come from user input
+      phoneDigits = phoneDigits.replace(/^0+/, '');
+      
+      // All users are from Canada
+      const userCountry = 'canada';
+      
+      // Combine country code with phone digits (don't add another + sign)
+      const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
+      
+      // Less restrictive validation
+      if (phoneDigits.length < 1) {
+        throw new Error('Please enter a valid phone number');
+      }
+      
+      console.log('Verifying OTP with phone:', fullWhatsappNumber, 'OTP:', otpValue);
+      
+      setLoading(true);
+      
+      // Call the API to verify OTP
+      const response = await apiVerifyOtp(fullWhatsappNumber, otpValue);
+      
+      if (response.status === 200) {
+        // Store user data and token in local storage
+        const { token, user } = response.data;
+        
+        // Add country to user data
+        const userData = {
+          ...user,
+          country: userCountry
+        };
+        
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        // Important: Call login from AuthContext to ensure user state is updated
+        await login(user.email || "", otpValue, fullWhatsappNumber);
+        
+        // Update state for success notification
+        setUserData(userData);
+        setShowNotification(true);
+        
+        // Start redirect timer
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2500); // Give enough time for user to see notification
       } else {
-        setError('Invalid OTP. Please try again.');
+        throw new Error(response.message || 'OTP verification failed');
       }
     } catch (err) {
-      setError('Authentication failed. Please try again.');
-      console.error(err);
+      setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+    // Redirect to dashboard when notification is closed
+    if (userData) {
+      router.push('/dashboard');
     }
   };
   
@@ -140,12 +218,21 @@ export default function Login() {
       {/* Show preloader when loading */}
       {loading && <Preloader fullScreen state={otpSent ? "auth_verify_otp" : "auth_send_otp"} />}
       
+      {/* Success Notification */}
+      <SlideNotification
+        show={showNotification}
+        message={userData ? `Welcome back, ${userData.first_name}! Login successful.` : "Login successful."}
+        type="success"
+        duration={2000}
+        onClose={handleCloseNotification}
+      />
+      
       <div className={styles.formContainer}>
         <div className={styles.logoContainer}>
           <div className={styles.logoWrapper}>
             <Image 
               src="/Optisage-Log0-white.svg" 
-              alt="OptSage Logo" 
+              alt="optisage Logo" 
               width={64} 
               height={64}
               className="h-16 w-16" 
@@ -153,11 +240,11 @@ export default function Login() {
           </div>
         </div>
         <h2 className={styles.title}>
-          {otpSent ? 'Enter OTP Code' : 'Sign in to OptSage'}
+          {otpSent ? 'Enter OTP Code' : 'Sign in to optisage'}
         </h2>
         <p className={styles.subtitle}>
           {otpSent 
-            ? `We've sent a verification code to ${whatsappNumber}`
+            ? `We've sent a verification code to your WhatsApp number (${countryCode + whatsappNumber})`
             : 'Enter your WhatsApp number to receive a one-time password'}
         </p>
 
@@ -188,7 +275,7 @@ export default function Login() {
                   </p>
                 </div>
               </div>
-
+              
               <div>
                 <button
                   type="submit"
@@ -208,7 +295,7 @@ export default function Login() {
                   )}
                 </button>
               </div>
-
+              
               <div className={styles.formFooter}>
                 <p>
                   Don't have an account yet?{' '}
@@ -240,8 +327,20 @@ export default function Login() {
                     />
                   ))}
                 </div>
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500">
+                    Didn't receive a code?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setOtpSent(false)}
+                      className={styles.formLink}
+                    >
+                      Go back and try again
+                    </button>
+                  </p>
+                </div>
               </div>
-
+              
               <div>
                 <button
                   type="submit"
@@ -257,18 +356,8 @@ export default function Login() {
                       Verifying...
                     </>
                   ) : (
-                    'Verify OTP'
+                    'Verify & Sign In'
                   )}
-                </button>
-              </div>
-              
-              <div className={styles.formFooter}>
-                <button
-                  type="button"
-                  onClick={() => setOtpSent(false)}
-                  className={styles.backButton}
-                >
-                  Go back
                 </button>
               </div>
             </form>

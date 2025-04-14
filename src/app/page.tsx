@@ -10,13 +10,23 @@ export default function Home() {
   const { user, loading } = useAuth();
   
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.push('/dashboard');
-      } else {
-        router.push('/auth/login');
+    // Check if user is authenticated
+    const checkAuth = () => {
+      // First check localStorage directly 
+      const authToken = localStorage.getItem('authToken');
+      const userData = localStorage.getItem('userData');
+      
+      if (!loading) {
+        if (user || (authToken && userData)) {
+          // If either context has user or we have auth data in localStorage, go to dashboard
+          router.push('/dashboard');
+        } else {
+          router.push('/auth/login');
+        }
       }
-    }
+    };
+    
+    checkAuth();
   }, [user, loading, router]);
   
   return (
