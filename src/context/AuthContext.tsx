@@ -1,13 +1,13 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-
+import axios from 'axios';
 interface User {
   id: string;
-  fullName: string;
+  name: string;
   email: string;
-  whatsappNumber: string;
-  whatsappChannelName: string;
+  phone: string;
+  group_name: string;
   referralLink?: string;
 }
 
@@ -38,6 +38,9 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Base URL for API
+const API_BASE_URL = 'https://api-staging.optisage.ai/api/referral-system';
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,21 +68,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = useCallback(async (email: string, otp: string, whatsappNumber: string): Promise<void> => {
     setLoading(true);
     try {
-      // In a real app, this would make an API call to verify the OTP and get user data
-      // For demo, we'll simulate a successful login
-      const mockUser: User = {
-        id: '123456',
-        fullName: 'Test User',
+      const response = await axios.post(`${API_BASE_URL}/login`, {
         email,
+        otp,
         whatsappNumber,
-        whatsappChannelName: 'Test Channel',
-        referralLink: `https://optsage.com/ref/123456`,
-      };
-      
-      setUser(mockUser);
-      // Safe localStorage access
+      });
+
+      const userData = response.data;
+      setUser(userData);
+
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('user', JSON.stringify(userData));
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -92,10 +91,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = useCallback(async (): Promise<void> => {
     setLoggingOut(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       setUser(null);
-      // Safe localStorage access
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
       }
@@ -105,37 +102,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const verifyOtp = useCallback(async (identifier: string, otp: string): Promise<boolean> => {
-    // In a real app, this would call an API to verify the OTP
-    // The identifier can be either an email or whatsapp number
-    // For demo, we'll accept any OTP
-    console.log(`Verifying OTP for ${identifier}`);
-    return true;
+    try {
+      const response = await axios.post(`${API_BASE_URL}/verify-otp`, {
+        identifier,
+        otp,
+      });
+
+      return response.data.verified;
+    } catch (error) {
+      console.error('OTP verification failed:', error);
+      return false;
+    }
   }, []);
 
+
   const sendOtp = useCallback(async (identifier: string): Promise<void> => {
-    // In a real app, this would call an API to send the OTP
-    // The identifier can be either an email or whatsapp number
-    // For demo, we'll just simulate the process
-    console.log(`OTP sent to ${identifier}`);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      await axios.post(`${API_BASE_URL}/send-otp`, {
+        identifier,
+      });
+    } catch (error) {
+      console.error('Sending OTP failed:', error);
+      throw error;
+    }
   }, []);
 
   const register = useCallback(async (userData: Omit<User, 'id' | 'referralLink'>): Promise<void> => {
     setLoading(true);
     try {
-      // In a real app, this would make an API call to register the user
-      // For demo, we'll simulate a successful registration
-      const mockUser: User = {
-        id: '123456',
-        ...userData,
-        referralLink: `https://optsage.com/ref/123456`,
-      };
-      
-      setUser(mockUser);
-      // Safe localStorage access
+      const response = await axios.post(`${API_BASE_URL}/register`, userData);
+
+      const newUser = response.data;
+      setUser(newUser);
+
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('user', JSON.stringify(newUser));
       }
     } catch (error) {
       console.error('Registration failed:', error);

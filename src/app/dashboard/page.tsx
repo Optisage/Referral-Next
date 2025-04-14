@@ -111,15 +111,15 @@ export default function Dashboard() {
         {/* Total Referrals Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
-            <div className="rounded-full bg-whatsapp-light-green p-3 transform transition-transform group-hover:scale-110">
-              <FaUsers className="h-6 w-6 text-whatsapp-dark-green" />
+            <div className="p-3 transition-transform transform rounded-full bg-whatsapp-light-green group-hover:scale-110">
+              <FaUsers className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="bg-green-50 text-green-600 font-semibold px-3 py-1 rounded-full flex items-center">
-              <span className="text-xs mr-1">+</span>{stats.growthRateReferrals}% this month
+            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs">+</span>{stats.growthRateReferrals}% this month
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-gray-500 font-medium">Total Referrals</p>
+            <p className="font-medium text-gray-500">Total Referrals</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
               {stats.totalReferrals.toLocaleString()}
             </h2>
@@ -129,15 +129,15 @@ export default function Dashboard() {
         {/* Total Points Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
-            <div className="rounded-full bg-whatsapp-light-green p-3">
-              <FaStar className="h-6 w-6 text-whatsapp-dark-green" />
+            <div className="p-3 rounded-full bg-whatsapp-light-green">
+              <FaStar className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="bg-green-50 text-green-600 font-semibold px-3 py-1 rounded-full flex items-center">
-              <span className="text-xs mr-1">+</span>{stats.growthRatePoints}% this month
+            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs">+</span>{stats.growthRatePoints}% this month
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-gray-500 font-medium">Total Points</p>
+            <p className="font-medium text-gray-500">Total Points</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
               {stats.totalPoints.toLocaleString()}
             </h2>
@@ -147,15 +147,15 @@ export default function Dashboard() {
         {/* Conversion Rate Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
-            <div className="rounded-full bg-whatsapp-light-green p-3">
-              <FaExchangeAlt className="h-6 w-6 text-whatsapp-dark-green" />
+            <div className="p-3 rounded-full bg-whatsapp-light-green">
+              <FaExchangeAlt className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="bg-green-50 text-green-600 font-semibold px-3 py-1 rounded-full flex items-center">
-              <span className="text-xs mr-1">+</span>{stats.growthRateConversion}% this month
+            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs">+</span>{stats.growthRateConversion}% this month
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-gray-500 font-medium">Conversion Rate</p>
+            <p className="font-medium text-gray-500">Conversion Rate</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
               {stats.conversionRate}%
             </h2>
@@ -165,19 +165,19 @@ export default function Dashboard() {
         {/* Total Amount Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
-            <div className="rounded-full bg-whatsapp-light-green p-3">
-              <FaMoneyBillWave className="h-6 w-6 text-whatsapp-dark-green" />
+            <div className="p-3 rounded-full bg-whatsapp-light-green">
+              <FaMoneyBillWave className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="bg-green-50 text-green-600 font-semibold px-3 py-1 rounded-full flex items-center">
-              <span className="text-xs mr-1">+</span>{stats.growthRatePoints}% this month
+            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs">+</span>{stats.growthRatePoints}% this month
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-gray-500 font-medium">Total Amount ({currency.code})</p>
+            <p className="font-medium text-gray-500">Total Amount ({currency.code})</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
               {currency.symbol}{totalCashValue.toLocaleString(undefined, {maximumFractionDigits: 2})}
             </h2>
-            <p className="text-xs text-gray-500 mt-1">1 point = {currency.symbol}{(POINTS_TO_CASH_RATE * currency.rate).toFixed(2)}</p>
+            <p className="mt-1 text-xs text-gray-500">1 point = {currency.symbol}{(POINTS_TO_CASH_RATE * currency.rate).toFixed(2)}</p>
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function Dashboard() {
           <input 
             type="text" 
             value={user.referralLink || 'https://optsage.com/ref/123456'}
-            className="flex-grow px-4 py-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent bg-gray-50"
+            className="flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent bg-gray-50"
             readOnly
           />
           <button 
@@ -219,7 +219,7 @@ export default function Dashboard() {
             )}
           </button>
         </div>
-        <p className="text-sm text-gray-500 mt-3 bg-whatsapp-light-green/20 p-3 rounded-lg">
+        <p className="p-3 mt-3 text-sm text-gray-500 rounded-lg bg-whatsapp-light-green/20">
           Share this link with your WhatsApp group members to earn rewards when they sign up and complete transactions.
         </p>
       </div>
@@ -231,13 +231,13 @@ export default function Dashboard() {
         </h2>
         <div className="divide-y">
           {referrals.map((referral) => (
-            <div key={referral.id} className="py-4 flex justify-between items-center hover:bg-gray-50 px-3 rounded-lg transition-colors">
+            <div key={referral.id} className="flex items-center justify-between px-3 py-4 transition-colors rounded-lg hover:bg-gray-50">
               <div>
-                <p className="font-medium flex items-center">
-                  <span className="h-2 w-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                <p className="flex items-center font-medium">
+                  <span className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
                   {referral.userName} {referral.status === 'registered' ? 'registered via your link' : 'made their first subscription'}
                 </p>
-                <p className="text-sm text-gray-500 ml-4">
+                <p className="ml-4 text-sm text-gray-500">
                   {Math.floor((new Date().getTime() - referral.registrationDate.getTime()) / 60000)} minutes ago
                 </p>
               </div>

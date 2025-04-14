@@ -122,10 +122,10 @@ export default function Register() {
       
       if (isValid) {
         await register({
-          fullName,
+          name: fullName,
           email,
-          whatsappNumber: fullWhatsappNumber,
-          whatsappChannelName,
+          phone: fullWhatsappNumber,
+          group_name:whatsappChannelName,
         });
         router.push('/dashboard');
       } else {
@@ -151,7 +151,7 @@ export default function Register() {
             alt="OptSage Logo" 
             width={64} 
             height={64}
-            className="h-16 w-16" 
+            className="w-16 h-16" 
           />
         </div>
         <h2 className={styles.title}>
