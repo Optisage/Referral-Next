@@ -103,7 +103,7 @@ useEffect(() => {
             <div className="p-3 transition-transform transform rounded-full bg-whatsapp-light-green group-hover:scale-110">
               <FaUsers className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
               <span className="mr-1 text-xs">+</span>
               {analytics?.total_referrals ?? 0}% this week
             </div>
@@ -122,7 +122,7 @@ useEffect(() => {
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaStar className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
               <span className="mr-1 text-xs">+</span>
               {analytics?.points_earned ?? 0}% this week
             </div>
@@ -141,7 +141,7 @@ useEffect(() => {
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaExchangeAlt className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
               <span className="mr-1 text-xs">+</span>
               {analytics?.conversion_rate ?? 0}% trend
             </div>
@@ -160,7 +160,7 @@ useEffect(() => {
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaMoneyBillWave className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
               <span className="mr-1 text-xs">+</span>
               {analytics?.total_amount ?? 0}th rank
             </div>
