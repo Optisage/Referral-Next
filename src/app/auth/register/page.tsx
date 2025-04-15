@@ -36,11 +36,10 @@ export default function Register() {
   const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) { // Wait for auth to initialize
       router.push('/dashboard');
     }
-  }, [user, router]);
-
+  }, [user, authLoading, router]);
   const handleCountryCodeChange = (newCode: string) => {
     setCountryCode(newCode);
   };
