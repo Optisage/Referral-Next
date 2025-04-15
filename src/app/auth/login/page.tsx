@@ -10,196 +10,78 @@ import styles from './login.module.css';
 import Preloader from '@/components/Preloader';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
 import SlideNotification from '@/components/SlideNotification';
-import { loginWithOtp, verifyOtp as apiVerifyOtp } from '@/services/api';
 
 export default function Login() {
-  const { login, loggingOut } = useAuth();
+  const { 
+    user,
+    loading: authLoading,
+    sendOtp,
+    verifyOtp,
+    login
+  } = useAuth();
   const router = useRouter();
   
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+1'); // Default to Canada
+  const [countryCode, setCountryCode] = useState('+1');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showNotification, setShowNotification] = useState<boolean>(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [showNotification, setShowNotification] = useState(false);
   
-  // References for the OTP input fields
-  const otpRefs = [
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-  ];
+  const otpRefs = Array(6).fill(null).map(() => useRef<HTMLInputElement>(null));
 
-  // Effect to redirect after notification is closed
   useEffect(() => {
-    if (userData && !showNotification) {
-      // Redirect to dashboard after notification is closed or expires
-      router.push('/dashboard');
-    }
-  }, [userData, showNotification, router]);
-  
+    if (user) router.push('/dashboard');
+  }, [user, router]);
+
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    try {
-      if (!whatsappNumber || whatsappNumber.trim() === '') {
-        throw new Error('WhatsApp number is required');
-      }
+    setLoading(true);
 
-      // Format the phone number properly - only keep digits
-      let phoneDigits = whatsappNumber.replace(/\D/g, '');
-      
-      // Remove leading zeros that might come from user input
-      phoneDigits = phoneDigits.replace(/^0+/, '');
-      
-      // All users are from Canada
-      const userCountry = 'canada';
-      
-      // Combine country code with phone digits (don't add another + sign)
+    try {
+      const phoneDigits = whatsappNumber.replace(/\D/g, '');
       const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
       
-      // Less restrictive validation
-      if (phoneDigits.length < 1) {
-        throw new Error('Please enter a valid phone number');
-      }
-
-      console.log('Sending login OTP to:', fullWhatsappNumber);
-      
-      setLoading(true);
-      
-      // Call the API to send OTP
-      const response = await loginWithOtp(fullWhatsappNumber);
-      
-      if (response.status === 200) {
-        setOtpSent(true);
-        // Focus the first OTP input when OTP is sent
-        setTimeout(() => {
-          if (otpRefs[0].current) {
-            otpRefs[0].current!.focus();
-          }
-        }, 100);
-      } else {
-        throw new Error(response.message || 'Failed to send OTP');
-      }
+      await login(fullWhatsappNumber);
+      setOtpSent(true);
+      setTimeout(() => otpRefs[0].current?.focus(), 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleOtpChange = (index: number, value: string) => {
-    // Only allow numbers
-    if (value && !/^\d+$/.test(value)) return;
-    
-    // Update the OTP state
+    if (!/^\d+$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    
-    // Auto-focus to the next input if a digit was entered
-    if (value && index < 5 && otpRefs[index + 1].current) {
-      otpRefs[index + 1].current!.focus();
+
+    if (value && index < 5) {
+      otpRefs[index + 1].current?.focus();
     }
   };
-  
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Move to the previous input on backspace if current input is empty
-    if (e.key === 'Backspace' && !otp[index] && index > 0 && otpRefs[index - 1].current) {
-      otpRefs[index - 1].current!.focus();
-    }
-  };
-  
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text');
-    
-    // Check if pasted content is a valid 6-digit number
-    if (/^\d{6}$/.test(pastedData)) {
-      const digits = pastedData.split('');
-      setOtp(digits);
-      
-      // Focus the last input after paste
-      if (otpRefs[5].current) {
-        otpRefs[5].current!.focus();
-      }
-    }
-  };
-  
+
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    
+    setLoading(true);
+
     try {
-      const otpValue = otp.join('');
-      
-      if (otpValue.length !== 6) {
-        throw new Error('Please enter all 6 digits of the OTP');
-      }
-      
-      if (!whatsappNumber || whatsappNumber.trim() === '') {
-        throw new Error('WhatsApp number is required');
-      }
-      
-      // Format the phone number properly - only keep digits
-      let phoneDigits = whatsappNumber.replace(/\D/g, '');
-      
-      // Remove leading zeros that might come from user input
-      phoneDigits = phoneDigits.replace(/^0+/, '');
-      
-      // All users are from Canada
-      const userCountry = 'canada';
-      
-      // Combine country code with phone digits (don't add another + sign)
+      const phoneDigits = whatsappNumber.replace(/\D/g, '');
       const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
+      const otpValue = otp.join('');
+
+      if (otpValue.length !== 6) throw new Error('Please enter all 6 digits');
       
-      // Less restrictive validation
-      if (phoneDigits.length < 1) {
-        throw new Error('Please enter a valid phone number');
-      }
-      
-      console.log('Verifying OTP with phone:', fullWhatsappNumber, 'OTP:', otpValue);
-      
-      setLoading(true);
-      
-      // Call the API to verify OTP
-      const response = await apiVerifyOtp(fullWhatsappNumber, otpValue);
-      
-      if (response.status === 200) {
-        // Store user data and token in local storage
-        const { token, user } = response.data;
-        
-        // Add country to user data
-        const userData = {
-          ...user,
-          country: userCountry
-        };
-        
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userData', JSON.stringify(userData));
-        
-        // Important: Call login from AuthContext to ensure user state is updated
-        await login(user.email || "", otpValue, fullWhatsappNumber);
-        
-        // Update state for success notification
-        setUserData(userData);
-        setShowNotification(true);
-        
-        // Start redirect timer
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2500); // Give enough time for user to see notification
-      } else {
-        throw new Error(response.message || 'OTP verification failed');
-      }
+      await verifyOtp(fullWhatsappNumber, otpValue);
+      setShowNotification(true);
+      setTimeout(() => router.push('/dashboard'), 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -207,26 +89,23 @@ export default function Login() {
 
   const handleCloseNotification = () => {
     setShowNotification(false);
-    // Redirect to dashboard when notification is closed
-    if (userData) {
-      router.push('/dashboard');
-    }
+    router.push('/dashboard');
   };
-  
+
   return (
     <div className={styles.container}>
-      {/* Show preloader when loading */}
-      {loading && <Preloader fullScreen state={otpSent ? "auth_verify_otp" : "auth_send_otp"} />}
-      
-      {/* Success Notification */}
+      {(authLoading || loading) && (
+        <Preloader fullScreen state={otpSent ? "auth_verify_otp" : "auth_send_otp"} />
+      )}
+
       <SlideNotification
         show={showNotification}
-        message={userData ? `Welcome back, ${userData.first_name}! Login successful.` : "Login successful."}
+        message="Login successful! Redirecting to dashboard..."
         type="success"
         duration={2000}
         onClose={handleCloseNotification}
       />
-      
+
       <div className={styles.formContainer}>
         <div className={styles.logoContainer}>
           <div className={styles.logoWrapper}>
@@ -235,7 +114,7 @@ export default function Login() {
               alt="optisage Logo" 
               width={64} 
               height={64}
-              className="h-16 w-16" 
+              className="w-16 h-16" 
             />
           </div>
         </div>
@@ -244,7 +123,7 @@ export default function Login() {
         </h2>
         <p className={styles.subtitle}>
           {otpSent 
-            ? `We've sent a verification code to your WhatsApp number (${countryCode + whatsappNumber})`
+            ? `Verification code sent to ${countryCode}${whatsappNumber}`
             : 'Enter your WhatsApp number to receive a one-time password'}
         </p>
 
@@ -262,18 +141,15 @@ export default function Login() {
                 <label htmlFor="whatsappNumber" className={styles.formLabel}>
                   WhatsApp Number
                 </label>
-                <div className="mt-1 phone-input-container">
-                  <CountryCodeSelect
-                    value={countryCode}
-                    onChange={setCountryCode}
-                    phone={whatsappNumber}
-                    onPhoneChange={setWhatsappNumber}
-                    className=""
-                  />
-                  <p className="mt-2 text-sm text-gray-500">
-                    We'll send a verification code to this WhatsApp number
-                  </p>
-                </div>
+                <CountryCodeSelect
+                  value={countryCode}
+                  onChange={setCountryCode}
+                  phone={whatsappNumber}
+                  onPhoneChange={setWhatsappNumber}
+                />
+                <p className={styles.phoneHint}>
+                  We'll send a verification code to this WhatsApp number
+                </p>
               </div>
               
               <div>
@@ -298,7 +174,7 @@ export default function Login() {
               
               <div className={styles.formFooter}>
                 <p>
-                  Don't have an account yet?{' '}
+                  Don't have an account?{' '}
                   <Link href="/auth/register" className={styles.formLink}>
                     Sign up
                   </Link>
@@ -320,22 +196,20 @@ export default function Login() {
                       maxLength={1}
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      onPaste={index === 0 ? handlePaste : undefined}
                       className={styles.otpInput}
                       aria-label={`Digit ${index + 1}`}
                     />
                   ))}
                 </div>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500">
+                <div className={styles.otpFooter}>
+                  <p className={styles.otpHint}>
                     Didn't receive a code?{' '}
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
                       className={styles.formLink}
                     >
-                      Go back and try again
+                      Resend OTP
                     </button>
                   </p>
                 </div>

@@ -2,238 +2,129 @@
 
 import { useState, FormEvent, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, getCountryFromPhoneNumber } from '@/context/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './register.module.css';
 import Preloader from '@/components/Preloader';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
-import { FaUser, FaEnvelope, FaPhone, FaHashtag } from 'react-icons/fa';
-import { register, verifyOtp as apiVerifyOtp } from '@/services/api';
 import SlideNotification from '@/components/SlideNotification';
 
 export default function Register() {
-  const { register: authRegister, sendOtp, verifyOtp: contextVerifyOtp, loggingOut } = useAuth();
+  const { 
+    user,
+    loading: authLoading,
+    register,
+    verifyOtp,
+    setPageLoading
+  } = useAuth();
   const router = useRouter();
   
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState('');
   
   // Form fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+1'); // Default to Canada
+  const [countryCode, setCountryCode] = useState('+1');
   const [whatsappChannelName, setWhatsappChannelName] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpSent, setOtpSent] = useState(false);
   
-  // References for the OTP input fields
-  const otpRefs = [
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-  ];
-  
-  const [showNotification, setShowNotification] = useState<boolean>(false);
-  const [userData, setUserData] = useState<any>(null);
-  
+  const otpRefs = Array(6).fill(null).map(() => useRef<HTMLInputElement>(null));
+  const [showNotification, setShowNotification] = useState(false);
+
   useEffect(() => {
-    if (userData && !showNotification) {
+    if (user) {
       router.push('/dashboard');
     }
-  }, [userData, showNotification, router]);
-  
+  }, [user, router]);
+
   const handleCountryCodeChange = (newCode: string) => {
     setCountryCode(newCode);
   };
-  
-  const handleWhatsappNumberChange = (newNumber: string) => {
-    setWhatsappNumber(newNumber);
-  };
-  
+
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setLocalLoading(true);
 
     try {
-      if (!fullName || !email || !whatsappChannelName) {
-        throw new Error('All fields are required');
-      }
+      const fullWhatsappNumber = `${countryCode}${whatsappNumber.replace(/\D/g, '')}`;
+      const country = getCountryFromPhoneNumber(fullWhatsappNumber);
 
-      if (!whatsappNumber || whatsappNumber.trim() === '') {
-        throw new Error('WhatsApp number is required');
-      }
-
-      // All users are from Canada
-      const userCountry = 'canada';
-
-      // Combine country code with phone number - keep as is, don't standardize
-      const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
-      const fullWhatsappNumber = countryCode + cleanPhone;
-      
-      // Less restrictive validation - just check that there's something after the country code
-      if (cleanPhone.length < 1) {
-        throw new Error('Please enter a valid phone number');
-      }
-
-      console.log('Sending with phone number:', fullWhatsappNumber);
-
-      const response = await register(
+      await register({
+        name:fullName,
         email,
-        fullName,
-        fullWhatsappNumber,
-        whatsappChannelName
-      );
+        phone: fullWhatsappNumber,
+        group_name: whatsappChannelName,
+        country
+      });
 
-      if (response.status === 200) {
-        setOtpSent(true);
-        setStep(2);
-      } else {
-        throw new Error(response.message || 'Failed to send OTP');
-      }
+      setStep(2);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
-  
+
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Move to next input if value is entered
     if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      if (nextInput) nextInput.focus();
+      otpRefs[index + 1].current?.focus();
     }
   };
-  
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      if (prevInput) prevInput.focus();
-    }
-  };
-  
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text');
-    
-    // Check if pasted content is a valid 6-digit number
-    if (/^\d{6}$/.test(pastedData)) {
-      const digits = pastedData.split('');
-      setOtp(digits);
-      
-      // Focus the last input after paste
-      if (otpRefs[5].current) {
-        otpRefs[5].current!.focus();
-      }
-    }
-  };
-  
+
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setLocalLoading(true);
 
     try {
+      const fullWhatsappNumber = `${countryCode}${whatsappNumber.replace(/\D/g, '')}`;
       const otpValue = otp.join('');
+
       if (otpValue.length !== 6) {
         throw new Error('Please enter a valid OTP');
       }
 
-      if (!whatsappNumber || whatsappNumber.trim() === '') {
-        throw new Error('WhatsApp number is required');
-      }
+      const verified = await verifyOtp(fullWhatsappNumber, otpValue);
+      if (!verified) throw new Error('OTP verification failed');
 
-      // All users are from Canada
-      const userCountry = 'canada';
-      
-      // Combine country code with phone number - keep as is, don't standardize
-      const cleanPhone = whatsappNumber.replace(/^\+/, '').replace(/\D/g, '');
-      const fullWhatsappNumber = countryCode + cleanPhone;
-      
-      // Less restrictive validation
-      if (cleanPhone.length < 1) {
-        throw new Error('Please enter a valid phone number');
-      }
-
-      console.log('Verifying with phone number:', fullWhatsappNumber);
-
-      // Call the API directly to verify OTP
-      const response = await apiVerifyOtp(fullWhatsappNumber, otpValue);
-
-      if (response.status === 200) {
-        // Store user data and token in local storage or auth context
-        const { token, user } = response.data;
-        
-        // Add country to user data
-        const userData = {
-          ...user,
-          country: userCountry
-        };
-        
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userData', JSON.stringify(userData));
-        
-        // Call AuthContext register to ensure context is updated
-        await authRegister({
-          fullName: fullName,
-          email: email || user.email,
-          whatsappNumber: fullWhatsappNumber,
-          whatsappChannelName: whatsappChannelName,
-          country: userCountry
-        });
-        
-        // Show success notification instead of modal
-        setUserData(userData);
-        setShowNotification(true);
-        
-        // Start redirect timer
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2500); // Give enough time for user to see notification
-      } else {
-        throw new Error(response.message || 'OTP verification failed');
-      }
+      setShowNotification(true);
+      setTimeout(() => router.push('/dashboard'), 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to verify OTP');
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
-  
+
   const handleCloseNotification = () => {
     setShowNotification(false);
-    // Redirect to dashboard when notification is closed
-    if (userData) {
-      router.push('/dashboard');
-    }
+    router.push('/dashboard');
   };
-  
+
   return (
     <div className={styles.container}>
-      {/* Show preloader when loading */}
-      {loading && <Preloader fullScreen state={step === 1 ? "auth_send_otp" : "auth_register"} />}
-      
-      {/* Success Notification */}
+      {(authLoading || localLoading) && (
+        <Preloader fullScreen state={step === 1 ? "auth_send_otp" : "auth_register"} />
+      )}
+
       <SlideNotification
         show={showNotification}
-        message={userData ? `Welcome, ${userData.first_name}! Your account has been created successfully.` : "Registration successful!"}
+        message="Registration successful! Redirecting to dashboard..."
         type="success"
         duration={2000}
         onClose={handleCloseNotification}
       />
-      
+
       <div className={styles.logoContainer}>
         <div className={styles.logoWrapper}>
           <Image 
@@ -250,7 +141,7 @@ export default function Register() {
         <p className={styles.subtitle}>
           {step === 1 
             ? 'Fill in your details to get started'
-            : `We've sent a verification code to your WhatsApp number (${countryCode + whatsappNumber})`}
+            : `Verification code sent to ${countryCode}${whatsappNumber}`}
         </p>
       </div>
 
@@ -268,36 +159,32 @@ export default function Register() {
                 <label htmlFor="fullName" className={styles.label}>
                   Full Name
                 </label>
-                <div className="mt-1">
-                  <input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    autoComplete="name"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className={styles.inputField}
-                  />
-                </div>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={styles.inputField}
+                />
               </div>
               
               <div className={styles.formGroup}>
                 <label htmlFor="email" className={styles.label}>
                   Email Address
                 </label>
-                <div className="mt-1">
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={styles.inputField}
-                  />
-                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={styles.inputField}
+                />
               </div>
               
               <div className={styles.formGroup}>
@@ -308,7 +195,7 @@ export default function Register() {
                   value={countryCode}
                   onChange={handleCountryCodeChange}
                   phone={whatsappNumber}
-                  onPhoneChange={handleWhatsappNumberChange}
+                  onPhoneChange={setWhatsappNumber}
                 />
               </div>
               
@@ -316,29 +203,25 @@ export default function Register() {
                 <label htmlFor="whatsappChannelName" className={styles.label}>
                   WhatsApp Channel Name
                 </label>
-                <div className="mt-1">
-                  <input
-                    id="whatsappChannelName"
-                    name="whatsappChannelName"
-                    type="text"
-                    required
-                    value={whatsappChannelName}
-                    onChange={(e) => setWhatsappChannelName(e.target.value)}
-                    className={styles.inputField}
-                    placeholder="Name of your WhatsApp group/channel"
-                  />
-                </div>
+                <input
+                  id="whatsappChannelName"
+                  name="whatsappChannelName"
+                  type="text"
+                  required
+                  value={whatsappChannelName}
+                  onChange={(e) => setWhatsappChannelName(e.target.value)}
+                  className={styles.inputField}
+                  placeholder="Name of your WhatsApp group/channel"
+                />
               </div>
               
-              <div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={styles.button}
-                >
-                  {loading ? 'Processing...' : 'Send OTP'}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={localLoading}
+                className={styles.button}
+              >
+                {localLoading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
               
               <div className={styles.formFooter}>
                 <p>
@@ -364,8 +247,6 @@ export default function Register() {
                       maxLength={1}
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      onPaste={index === 0 ? handlePaste : undefined}
                       className={styles.otpInput}
                       aria-label={`Digit ${index + 1}`}
                     />
@@ -373,19 +254,19 @@ export default function Register() {
                 </div>
               </div>
               
-              <div className="flex flex-col space-y-4">
+              <div className={styles.buttonGroup}>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={localLoading}
                   className={styles.button}
                 >
-                  {loading ? 'Processing...' : 'Verify & Register'}
+                  {localLoading ? 'Verifying...' : 'Verify & Login'}
                 </button>
                 
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className={`${styles.button} bg-gray-200 text-gray-800 hover:bg-gray-300`}
+                  className={styles.secondaryButton}
                 >
                   Go Back
                 </button>
@@ -396,4 +277,4 @@ export default function Register() {
       </div>
     </div>
   );
-} 
+}

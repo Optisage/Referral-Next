@@ -9,7 +9,7 @@ import Preloader from '@/components/Preloader';
 
 export default function Settings() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, saveSettings } = useAuth();
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -21,8 +21,9 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [saving, setSaving] = useState(false);
-  
+   
   // Profile form fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -36,10 +37,10 @@ export default function Settings() {
   // Set initial form values when user data is loaded
   useEffect(() => {
     if (user) {
-      setFullName(user.fullName);
+      setFullName(`${user.first_name} ${user.last_name}`.trim());
       setEmail(user.email);
-      setWhatsappNumber(user.whatsappNumber);
-      setWhatsappChannelName(user.whatsappChannelName);
+      setWhatsappNumber(user.phone);
+      setWhatsappChannelName(user.group_name);
     }
   }, [user]);
   
@@ -48,16 +49,25 @@ export default function Settings() {
     
     try {
       setSaving(true);
-      // In a real app, this would call an API to update the profile
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setErrorMessage('');
+      
+      await saveSettings({
+       
+          name: fullName,
+          email,
+          phone: whatsappNumber,
+          group_name: whatsappChannelName
+       
+      });
+      
       setSuccessMessage('Profile updated successfully');
       setFormSubmitted(true);
-      
       setTimeout(() => {
         setFormSubmitted(false);
         setSuccessMessage('');
       }, 3000);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to save profile');
     } finally {
       setSaving(false);
     }
@@ -68,16 +78,23 @@ export default function Settings() {
     
     try {
       setSaving(true);
-      // In a real app, this would call an API to update notification settings
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setErrorMessage('');
+      
+      await saveSettings({
+        notifications: {
+          email: emailNotifications,
+          whatsapp: whatsappNotifications
+        }
+      });
+      
       setSuccessMessage('Notification preferences updated successfully');
       setFormSubmitted(true);
-      
       setTimeout(() => {
         setFormSubmitted(false);
         setSuccessMessage('');
       }, 3000);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to save notifications');
     } finally {
       setSaving(false);
     }
@@ -100,6 +117,12 @@ export default function Settings() {
         </div>
       )}
       
+      {errorMessage && (
+        <div className={styles.errorAlert} role="alert">
+          <span>{errorMessage}</span>
+        </div>
+      )}
+      
       <div className={styles.content}>
         {/* Sidebar */}
         <div className={styles.sidebar}>
@@ -114,12 +137,14 @@ export default function Settings() {
               >
                 <FaUser className={styles.navIcon} /> Profile
               </button>
+              {/** 
               <button 
                 className={`${styles.navButton} ${activeTab === 'notifications' ? styles.activeNavButton : ''}`}
                 onClick={() => setActiveTab('notifications')}
               >
                 <FaBell className={styles.navIcon} /> Notifications
               </button>
+              */}
             </nav>
           </div>
         </div>

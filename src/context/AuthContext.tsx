@@ -1,35 +1,37 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import apiClient from '@/lib/axios'; // Use the configured axios instance
 
 // Function to get country from phone number
-const getCountryFromPhoneNumber = (phoneNumber: string): string => {
-  if (!phoneNumber) return 'nigeria'; // Default
+export const getCountryFromPhoneNumber = (phoneNumber: string): string => {
+  if (!phoneNumber) return 'nigeria';
   
-  // Simple country detection based on phone codes
   if (phoneNumber.startsWith('+234') || phoneNumber.startsWith('234')) {
     return 'nigeria';
   } else if (phoneNumber.startsWith('+233') || phoneNumber.startsWith('233')) {
     return 'ghana';
-  } else if (phoneNumber.startsWith('+1CA')) {
-    return 'canada';
-  } else if (phoneNumber.startsWith('+1') || phoneNumber.startsWith('1')) {
-    return 'usa';
-  } else if (phoneNumber.startsWith('+52') || phoneNumber.startsWith('52')) {
+  } else if (phoneNumber.startsWith('+1')) {
+    // Improved North America handling
+    return phoneNumber.startsWith('+152') ? 'canada' : 'usa';
+  } else if (phoneNumber.startsWith('+52')) {
     return 'mexico';
   }
   
-  return 'nigeria'; // Default fallback
+  return 'nigeria';
 };
 
 interface User {
   id: string;
   name: string;
   email: string;
-  whatsappNumber: string;
-  whatsappChannelName: string;
+  phone: string;
+  group_name: string;
   country?: string;
   referralLink?: string;
+  username?: string;
+  first_name?:string;
+  last_name?:string
 }
 
 interface AuthContextType {
@@ -37,30 +39,26 @@ interface AuthContextType {
   loading: boolean;
   pageLoading: boolean;
   loggingOut: boolean;
-  login: (email: string, otp: string, whatsappNumber: string) => Promise<void>;
+  login: (whatsappNumber: string) => Promise<void>;
   logout: () => Promise<void>;
   verifyOtp: (identifier: string, otp: string) => Promise<boolean>;
   sendOtp: (identifier: string) => Promise<void>;
   register: (userData: Omit<User, 'id' | 'referralLink'>) => Promise<void>;
   setPageLoading: (isLoading: boolean) => void;
+  saveSettings: (data: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
 interface AuthProviderProps {
   children: ReactNode;
 }
-
-// Base URL for API
-const API_BASE_URL = 'https://api-staging.optisage.ai/api/referral-system';
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
@@ -69,87 +67,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
+  // Initialize auth state
   useEffect(() => {
-    // Safe localStorage access only on the client
     if (typeof window !== 'undefined' && !initialized) {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
+      const loadUser = () => {
         try {
-          setUser(JSON.parse(storedUser));
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) setUser(JSON.parse(storedUser));
         } catch (error) {
-          console.error('Failed to parse stored user:', error);
+          console.error('Auth initialization error:', error);
           localStorage.removeItem('user');
         }
-      }
+      };
+      
+      loadUser();
       setLoading(false);
       setInitialized(true);
     }
   }, [initialized]);
 
-  const login = useCallback(async (email: string, otp: string, whatsappNumber: string): Promise<void> => {
+  const handleUserStorage = (userData: User | null) => {
+    setUser(userData);
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('user');
+    }
+  };
+
+  const login = useCallback(async (phone: string) => {
     setLoading(true);
     try {
-      // Determine country from phone number
-      let country = 'nigeria'; // Default
-      if (whatsappNumber.startsWith('+1') || whatsappNumber.startsWith('1')) {
-        country = 'usa';
-      } else if (whatsappNumber.startsWith('+1CA') || whatsappNumber === '+1CA') {
-        country = 'canada';
-      } else if (whatsappNumber.startsWith('+52') || whatsappNumber.startsWith('52')) {
-        country = 'mexico';
-      } else if (whatsappNumber.startsWith('+234') || whatsappNumber.startsWith('234')) {
-        country = 'nigeria';
-      } else if (whatsappNumber.startsWith('+233') || whatsappNumber.startsWith('233')) {
-        country = 'ghana';
-      }
+      // Real API call
+      const { data } = await apiClient.post('/referral-system/login', {
+        phone,
+      });
       
-      // In a real app, this would make an API call to verify the OTP and get user data
-      // For demo, we'll simulate a successful login
-      const mockUser: User = {
-        id: '123456',
-        fullName: 'Test User',
-        email,
-        otp,
-        whatsappNumber,
-        whatsappChannelName: 'Test Channel',
-        country,
-        referralLink: `https://optisage.com/ref/123456`,
-      };
-      
-      // If we already have a user in localStorage from API verification (mock),
-      // use that instead of creating a new one
-      const userData = localStorage.getItem('userData');
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          // Get country from phone number if not explicitly provided
-          const userCountry = parsedUser.country || getCountryFromPhoneNumber(parsedUser.phone);
-          
-          // Convert API user to our user format
-          const apiUser: User = {
-            id: parsedUser.id.toString(),
-            fullName: `${parsedUser.first_name} ${parsedUser.last_name}`,
-            email: parsedUser.email,
-            whatsappNumber: parsedUser.phone,
-            whatsappChannelName: parsedUser.group_name,
-            country: userCountry,
-            referralLink: `https://optisage.com/ref/${parsedUser.id}`,
-          };
-          setUser(apiUser);
-          // Store our user format too for context persistence
-          localStorage.setItem('user', JSON.stringify(apiUser));
-          return;
-        } catch (e) {
-          console.error("Failed to parse user data", e);
-        }
-      }
-      
-      // If no API user was found, use the mock user
-      setUser(mockUser);
-      // Safe localStorage access
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(userData));
-      }
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -158,63 +111,79 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  const logout = useCallback(async (): Promise<void> => {
+  const logout = useCallback(async () => {
     setLoggingOut(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setUser(null);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('authToken');
-      }
+      handleUserStorage(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
     } finally {
       setLoggingOut(false);
     }
   }, []);
 
-  const verifyOtp = useCallback(async (identifier: string, otp: string): Promise<boolean> => {
+  const verifyOtp = useCallback(async (phone: string, otp: string) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/verify-otp`, {
-        identifier,
-        otp,
-      });
-
-      return response.data.verified;
+      const { data } = await apiClient.post('/referral-system/verify-otp', { phone, otp });
+      handleUserStorage(data?.user);
+      localStorage.setItem('referral-token', data.token);
+      console.log(data);
+      return data;
     } catch (error) {
       console.error('OTP verification failed:', error);
       return false;
     }
   }, []);
 
-
-  const sendOtp = useCallback(async (identifier: string): Promise<void> => {
+  const sendOtp = useCallback(async (identifier: string) => {
     try {
-      await axios.post(`${API_BASE_URL}/send-otp`, {
-        identifier,
-      });
+      await apiClient.post('/auth/send-otp', { identifier });
     } catch (error) {
-      console.error('Sending OTP failed:', error);
+      console.error('OTP send failed:', error);
       throw error;
     }
   }, []);
 
-  const register = useCallback(async (userData: Omit<User, 'id' | 'referralLink'>): Promise<void> => {
+
+  const saveSettings = useCallback(async (data: any) => {
+    try {
+      const { data: response } = await apiClient.put('/customer/settings', data);
+      
+      // Safely update user data with proper response structure
+      const updatedUser = user ? {
+        ...user,
+        first_name: response?.first_name || user.first_name,
+        last_name: response?.last_name || user.last_name,
+        email: response?.email || user.email,
+        phone: response?.phone || user.phone,
+        group_name: response?.group_name || user.group_name
+      } : null;
+  
+      if (updatedUser) {
+        // Update both context and localStorage
+
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Settings update failed:', error);
+      throw error;
+    }
+  }, [user]);
+
+  const register = useCallback(async (userData: Omit<User, 'id' | 'referralLink'>) => {
     setLoading(true);
     try {
-      // In a real app, this would make an API call to register the user
-      // For demo, we'll simulate a successful registration
-      const mockUser: User = {
-        id: '123456',
-        ...userData,
-        referralLink: `https://optsage.com/ref/123456`,
-      };
+      const { data } = await apiClient.post('/referral-system/register', userData);
       
-      setUser(mockUser);
-      // Safe localStorage access
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(newUser));
-      }
+      const newUser: User = {
+        id: data.id,
+        ...userData,
+        referralLink: `https://optisage.com/ref/${data.id}`,
+      };
+
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -234,7 +203,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     sendOtp,
     register,
     setPageLoading,
+    getCountryFromPhoneNumber,
+    saveSettings
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}; 
+};

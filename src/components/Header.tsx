@@ -61,15 +61,15 @@ export default function Header() {
   return (
     <>
       {loggingOut && <Preloader fullScreen state="auth_logout" />}
-      <header className="bg-whatsapp-dark-green text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="text-white shadow-lg bg-whatsapp-dark-green">
+        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link 
                 href="/dashboard"
                 prefetch={true}
                 onClick={(e) => handleNavigation('/dashboard', e)} 
-                className="flex-shrink-0 flex items-center"
+                className="flex items-center flex-shrink-0"
               >
                 <Image 
                   src="/Optisage-Log0-white.svg" 
@@ -77,13 +77,13 @@ export default function Header() {
                   width={50} 
                   height={50}
                   priority
-                  className="h-12 w-auto py-1" 
+                  className="w-auto h-12 py-1" 
                 />
               </Link>
             </div>
             
             {/* Desktop navigation */}
-            <nav className="hidden md:flex space-x-1 items-center">
+            <nav className="items-center hidden space-x-1 md:flex">
               {user && navLinks.map((link) => (
                 <Link 
                   key={link.name}
@@ -103,36 +103,36 @@ export default function Header() {
             
             {/* Profile dropdown */}
             {user && (
-              <div className="hidden md:flex items-center">
-                <div className="ml-3 relative">
+              <div className="items-center hidden md:flex">
+                <div className="relative ml-3">
                   <div>
                     <button
-                      className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 bg-white/10 p-1 hover:bg-white/20 transition-colors"
+                      className="flex p-1 text-sm transition-colors rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 bg-white/10 hover:bg-white/20"
                       onClick={toggleProfileMenu}
                     >
-                      <FaUserCircle className="h-8 w-8" />
+                      <FaUserCircle className="w-8 h-8" />
                     </button>
                   </div>
                   
                   {profileMenuOpen && (
-                    <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 backdrop-blur-sm z-10">
+                    <div className="absolute right-0 z-10 w-48 py-1 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 backdrop-blur-sm">
                       <div className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">
-                        <p className="font-medium">{user.fullName}</p>
-                        <p className="text-gray-500 truncate text-xs">{user.email}</p>
+                        <p className="font-medium">{user.first_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
                       <Link 
                         href="/settings" 
                         prefetch={true}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center group"
+                        className="flex items-center block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 group"
                         onClick={(e) => handleNavigation('/settings', e)}
                       >
-                        <FaCog className="mr-2 text-gray-400 group-hover:text-whatsapp-green transition-colors" /> Settings
+                        <FaCog className="mr-2 text-gray-400 transition-colors group-hover:text-whatsapp-green" /> Settings
                       </Link>
                       <button
-                        className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center group"
+                        className="flex items-center block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 group"
                         onClick={handleLogout}
                       >
-                        <FaSignOutAlt className="mr-2 text-gray-400 group-hover:text-red-500 transition-colors" /> Sign out
+                        <FaSignOutAlt className="mr-2 text-gray-400 transition-colors group-hover:text-red-500" /> Sign out
                       </button>
                     </div>
                   )}
@@ -143,13 +143,13 @@ export default function Header() {
             {/* Mobile menu button */}
             <div className="flex items-center md:hidden">
               <button
-                className="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                className="inline-flex items-center justify-center p-2 text-white rounded-md hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
                 onClick={toggleMobileMenu}
               >
                 {mobileMenuOpen ? (
-                  <FaTimes className="block h-6 w-6" />
+                  <FaTimes className="block w-6 h-6" />
                 ) : (
-                  <FaBars className="block h-6 w-6" />
+                  <FaBars className="block w-6 h-6" />
                 )}
               </button>
             </div>
@@ -158,7 +158,7 @@ export default function Header() {
         
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute w-full bg-whatsapp-dark-green shadow-lg z-10">
+          <div className="absolute z-10 w-full shadow-lg md:hidden bg-whatsapp-dark-green">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {/* Mobile navigation links - show all options */}
               {user && navLinks.map((link) => (
@@ -182,17 +182,17 @@ export default function Header() {
               <div className="pt-4 pb-3 border-t border-white/10">
                 <div className="flex items-center px-5">
                   <div className="flex-shrink-0">
-                    <FaUserCircle className="h-10 w-10 text-white" />
+                    <FaUserCircle className="w-10 h-10 text-white" />
                   </div>
                   <div className="ml-3">
-                    <div className="text-base font-medium text-white">{user.fullName}</div>
+                    <div className="text-base font-medium text-white">{user.first_name}</div>
                     <div className="text-sm font-medium text-white/70">{user.email}</div>
                   </div>
                 </div>
-                <div className="mt-3 px-2 space-y-1">
+                <div className="px-2 mt-3 space-y-1">
                   {/* Only show logout button here, Settings is already in the nav menu */}
                   <button
-                    className="w-full text-left flex items-center block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-white/10"
+                    className="flex items-center block w-full px-3 py-2 text-base font-medium text-left text-white rounded-md hover:bg-white/10"
                     onClick={handleLogout}
                   >
                     <FaSignOutAlt className="mr-2" /> Sign out

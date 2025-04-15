@@ -8,66 +8,81 @@ import { useReferral } from '@/context/ReferralContext';
 import { FaUsers, FaDollarSign, FaExchangeAlt, FaCopy, FaCheckCircle, FaWhatsapp, FaChartLine, FaMoneyBillWave, FaStar } from 'react-icons/fa';
 import styles from './dashboard.module.css';
 import Preloader from '@/components/Preloader';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import SlideNotification from '@/components/SlideNotification';
 
-// Define currency data for different countries
+
+dayjs.extend(relativeTime);
 const CURRENCY_MAP = {
   canada: {
     code: 'CAD',
     symbol: 'C$',
     name: 'Canadian Dollar',
-    rate: 1 // Base currency
+    rate: 1
   }
-};
-
-// Function to get country from phone number - always returns 'canada'
-const getCountryFromPhoneNumber = (phoneNumber: string): string => {
-  return 'canada'; // All users are from Canada
 };
 
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading, setPageLoading } = useAuth();
-  const { stats, referrals, copyReferralLink, isLoading } = useReferral();
+  const { analytics, activityFeed, isLoading, error, copyReferralLink } = useReferral();
+  // Add state for notification visibility
+const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [copied, setCopied] = useState(false);
-  
-  // All users are from Canada
-  const userCountry = 'canada';
-  const currency = CURRENCY_MAP.canada;
-  
-  // Points to cash conversion - use totalAmount from API if available
-  const POINTS_TO_CASH_RATE = 100; // 1 point = C$100 (base in CAD)
-  const totalCashValue = stats.totalAmount || (stats.totalPoints * POINTS_TO_CASH_RATE);
-  
-  // Redirect if not authenticated
+
+  // Points conversion calculations
+  const POINTS_TO_CASH_RATE = 100;
+  const totalCashValue = analytics?.points_earned 
+    ? (analytics.points_earned * POINTS_TO_CASH_RATE)
+    : 0;
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/login');
     }
   }, [user, loading, router]);
 
-  // Signal page has loaded
   useEffect(() => {
-    // Set page loading false when component mounts
     setPageLoading(false);
-    
-    // Signal page is loading on unmount (when navigating away)
-    return () => {
-      setPageLoading(true);
-    };
+    return () => setPageLoading(true);
   }, [setPageLoading]);
-  
+
   const handleCopyLink = () => {
-    copyReferralLink();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (user?.username) {
+      copyReferralLink(user.username);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
-  
+   // Add useEffect to handle error changes
+useEffect(() => {
+  if (error) {
+    setShowErrorNotification(true);
+    const timer = setTimeout(() => setShowErrorNotification(false), 5000);
+    return () => clearTimeout(timer);
+  }
+}, [error]);
+
   if (loading || !user || isLoading) {
     return <Preloader fullScreen state="dashboard" />;
   }
-  
+
+ 
+
+
   return (
     <div className={styles.dashboardContainer}>
+     
+{showErrorNotification && (
+  <SlideNotification
+    show={showErrorNotification}
+    message={error || ''}
+    type="error"
+    duration={5000}
+    onClose={() => setShowErrorNotification(false)}
+  />
+)}
       <div className={styles.headerCard}>
         <h1 className={styles.dashboardTitle}>
           <FaChartLine className="mr-2 text-whatsapp-green" /> Admin Dashboard
@@ -75,12 +90,12 @@ export default function Dashboard() {
         <div className="flex items-center mt-2">
           <FaWhatsapp className="mr-2 text-whatsapp-green" />
           <p className="text-gray-600">
-            <span className="font-semibold">WhatsApp Group Name:</span> {user.whatsappChannelName}
+            <span className="font-semibold">WhatsApp Group Name:</span> {user.group_name}
           </p>
         </div>
       </div>
-      
-      {/* Stats Cards */}
+
+      {/* Stats Grid */}
       <div className={styles.statsGrid}>
         {/* Total Referrals Card */}
         <div className={styles.statCard}>
@@ -89,35 +104,37 @@ export default function Dashboard() {
               <FaUsers className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
             <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>{stats.growthRateReferrals}% this month
+              <span className="mr-1 text-xs">+</span>
+              {analytics?.total_referrals ?? 0}% this week
             </div>
           </div>
           <div className="mt-4">
             <p className="font-medium text-gray-500">Total Referrals</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
-              {stats.totalReferrals.toLocaleString()}
+              {analytics?.total_referrals?.toLocaleString() ?? 0}
             </h2>
           </div>
         </div>
-        
-        {/* Total Points Card */}
+
+        {/* Points Earned Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaStar className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
             <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>{stats.growthRatePoints}% this month
+              <span className="mr-1 text-xs">+</span>
+              {analytics?.points_earned ?? 0}% this week
             </div>
           </div>
           <div className="mt-4">
-            <p className="font-medium text-gray-500">Total Points</p>
+            <p className="font-medium text-gray-500">Points Earned</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
-              {stats.totalPoints.toLocaleString()}
+              {analytics?.points_earned?.toLocaleString() ?? 0}
             </h2>
           </div>
         </div>
-        
+
         {/* Conversion Rate Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
@@ -125,39 +142,39 @@ export default function Dashboard() {
               <FaExchangeAlt className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
             <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>{stats.growthRateConversion}% this month
+              <span className="mr-1 text-xs">+</span>
+              {analytics?.conversion_rate ?? 0}% trend
             </div>
           </div>
           <div className="mt-4">
             <p className="font-medium text-gray-500">Conversion Rate</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
-              {stats.conversionRate}%
+              {analytics?.conversion_rate ?? 0}%
             </h2>
           </div>
         </div>
-        
-        {/* Total Amount Card */}
+
+        {/* Total Cash Value Card */}
         <div className={styles.statCard}>
           <div className="flex items-center justify-between">
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaMoneyBillWave className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
             <div className="flex items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>{stats.growthRatePoints}% this month
+              <span className="mr-1 text-xs">+</span>
+              {analytics?.total_amount ?? 0}th rank
             </div>
           </div>
           <div className="mt-4">
-            <p className="font-medium text-gray-500">Total Amount ({currency.code})</p>
-            <p className="font-medium text-gray-500">Total Amount (CAD)</p>
+            <p className="font-medium text-gray-500">Total Value (CAD)</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
-              {currency.symbol}{totalCashValue.toLocaleString(undefined, {maximumFractionDigits: 2})}
+              {CURRENCY_MAP.canada.symbol}
+              {analytics?.total_amount}
             </h2>
-            <p className="mt-1 text-xs text-gray-500">1 point = {currency.symbol}{(POINTS_TO_CASH_RATE * currency.rate).toFixed(2)}</p>
-            <p className="mt-1 text-xs text-gray-500">1 point = {currency.symbol}{POINTS_TO_CASH_RATE.toFixed(2)} CAD</p>
           </div>
         </div>
       </div>
-      
+
       {/* Referral Link Section */}
       <div className={styles.referralSection}>
         <h2 className={styles.sectionTitle}>
@@ -172,9 +189,7 @@ export default function Dashboard() {
         <div className="flex items-center">
           <input 
             type="text" 
-            value={user.referralLink || 'https://optsage.com/ref/123456'}
-            className="flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent bg-gray-50"
-            value={user.referralLink || 'https://optisage.com/ref/123456'}
+            value={`https://optisage.ai/pricing?ref=${user.username}`}
             className="flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent bg-gray-50"
             readOnly
           />
@@ -201,35 +216,50 @@ export default function Dashboard() {
           Share this link with your WhatsApp group members to earn rewards when they sign up and complete transactions.
         </p>
       </div>
-      
-      {/* Recent Activity */}
+
+      {/* Activity Feed */}
       <div className={styles.activitySection}>
-        <h2 className={styles.sectionTitle}>
-          <FaUsers className="mr-2 text-whatsapp-green" /> Live Activity Feed
-        </h2>
-        <div className="divide-y">
-          {referrals.map((referral) => (
-            <div key={referral.id} className="flex items-center justify-between px-3 py-4 transition-colors rounded-lg hover:bg-gray-50">
-              <div>
-                <p className="flex items-center font-medium">
-                  <span className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
-                  {referral.userName} {referral.status === 'registered' ? 'registered via your link' : 'made their first subscription'}
-                </p>
-                <p className="ml-4 text-sm text-gray-500">
-                  {Math.floor((new Date().getTime() - referral.registrationDate.getTime()) / 60000)} minutes ago
-                </p>
-              </div>
-              <div className={`font-medium px-3 py-1 rounded-full text-sm ${
-                referral.status === 'registered' 
-                  ? 'text-blue-700 bg-blue-50' 
-                  : 'text-green-700 bg-green-50'
-              }`}>
-                {referral.status === 'registered' ? '0 points' : `+${referral.pointsEarned} points`}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+  <h2 className={styles.sectionTitle}>
+    <FaUsers className="mr-2 text-whatsapp-green" /> Recent Activity
+  </h2>
+  <p className="mb-4 text-sm text-gray-500">
+    Stay up to date with your latest referrals and point earnings.
+  </p>
+
+  {activityFeed?.length > 0 ? (
+     <div className={styles.activitySection}>
+     <h2 className={styles.sectionTitle}>
+       <FaUsers className="mr-2 text-whatsapp-green" /> Live Activity Feed
+     </h2>
+     <div className="divide-y">
+       {activityFeed.map((referral) => (
+         <div key={referral.id} className="flex items-center justify-between px-3 py-4 transition-colors rounded-lg hover:bg-gray-50">
+           <div>
+             <p className="flex items-center font-medium">
+               <span className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
+               {referral.description} 
+             </p>
+             <p className="ml-4 text-sm text-gray-500">
+             {dayjs(referral.created_at).fromNow()}
+             </p>
+           </div>
+           <div className={`font-medium px-3 py-1 rounded-full text-sm ${
+             referral.points === '0.00' 
+               ? 'text-blue-700 bg-blue-50' 
+               : 'text-green-700 bg-green-50'
+           }`}>
+             {referral.points === '0.00' ? '0 points' : `+${referral.points} points`}
+           </div>
+         </div>
+       ))}
+     </div>
+   </div>
+  ) : (
+    <div className="p-4 mt-2 text-sm text-center text-gray-500 rounded-lg bg-gray-50">
+      No recent activity to display.
+    </div>
+  )}
+</div>
     </div>
   );
-} 
+}
