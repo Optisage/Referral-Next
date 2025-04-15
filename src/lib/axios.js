@@ -23,10 +23,12 @@ apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
     const originalRequest = error.config;
+    const errorMessage = error?.response?.data?.message || "An error occurred";
 
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
+      const errorMessage =
+        error?.response?.data?.message || "An error occurred";
       if (typeof window !== "undefined") {
         // Clear auth state without triggering redirect here
         localStorage.removeItem("referral-token");
@@ -37,7 +39,7 @@ apiClient.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error?.response?.data || error);
+    return Promise.reject(new Error(errorMessage));
   }
 );
 

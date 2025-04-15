@@ -26,7 +26,7 @@ const CURRENCY_MAP = {
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading, setPageLoading } = useAuth();
-  const { analytics, activityFeed, isLoading, error, copyReferralLink } = useReferral();
+  const { analytics, activityFeed, isLoading, error, copyReferralLink,refreshAnalytics, refreshActivityFeed } = useReferral();
   // Add state for notification visibility
 const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,6 +43,19 @@ const [showErrorNotification, setShowErrorNotification] = useState(false);
     }
   }, [user, loading, router]);
 
+
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        await Promise.all([refreshAnalytics(), refreshActivityFeed()]);
+      } catch (error) {
+        console.error('Failed to refresh dashboard data:', error);
+      }
+    };
+    
+    refreshData();
+  }, [refreshAnalytics, refreshActivityFeed]);
+  
   useEffect(() => {
     setPageLoading(false);
     return () => setPageLoading(true);

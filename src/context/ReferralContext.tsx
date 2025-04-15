@@ -241,7 +241,7 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await Promise.all([fetchAnalytics(), fetchActivityFeed(), fetchTransactions(1), fetchWithdrawalHistory()]);
+        await Promise.all([fetchTransactions(1), fetchWithdrawalHistory()]);
       } catch (err) {
         setError('Failed to initialize referral data');
       }

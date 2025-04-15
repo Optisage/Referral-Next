@@ -45,6 +45,12 @@ export default function Transactions() {
   }, [user, loading, router]);
 
   useEffect(() => {
+    if (user && !loading) {
+      fetchTransactions(1);
+    }
+  }, [user, loading, fetchTransactions]);
+
+  useEffect(() => {
     setPageLoading(false);
     return () => setPageLoading(true);
   }, [setPageLoading]);
@@ -88,6 +94,11 @@ export default function Transactions() {
       }
       if (sortKey === 'amount' || sortKey === 'points') {
         return direction * (a[sortKey] - b[sortKey]);
+      }
+      if (sortKey === 'referred') {
+        const aName = `${a.referred.first_name} ${a.referred.last_name}`.toLowerCase();
+        const bName = `${b.referred.first_name} ${b.referred.last_name}`.toLowerCase();
+        return direction * aName.localeCompare(bName);
       }
       return 0;
     });
