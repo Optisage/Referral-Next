@@ -34,9 +34,9 @@ const [showErrorNotification, setShowErrorNotification] = useState(false);
   // Points conversion calculations
   const POINTS_TO_CASH_RATE = 100;
   const totalCashValue = analytics?.points_earned 
-    ? (analytics.points_earned * POINTS_TO_CASH_RATE)
+    ? (analytics.points_earned / POINTS_TO_CASH_RATE)
     : 0;
-
+    
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/login');
@@ -168,8 +168,8 @@ useEffect(() => {
           <div className="mt-4">
             <p className="font-medium text-gray-500">Total Value (CAD)</p>
             <h2 className="text-4xl font-bold text-whatsapp-dark-green">
-              {CURRENCY_MAP.canada.symbol}
-              {analytics?.total_amount}
+            {CURRENCY_MAP.canada.symbol}
+            {totalCashValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </h2>
           </div>
         </div>

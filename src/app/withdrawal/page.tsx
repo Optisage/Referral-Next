@@ -30,6 +30,16 @@ export default function Withdrawal() {
     isLoading: referralLoading,
     error: referralError
   } = useReferral();
+
+  // Add status mapping function
+const getStatusText = (status: number) => {
+  switch (status) {
+    case 0: return 'Pending';
+    case 1: return 'Approved';
+    case 2: return 'Rejected';
+    default: return 'Unknown';
+  }
+};
   
   const [amount, setAmount] = useState<string>('');
   const [calculatorPoints, setCalculatorPoints] = useState<string>('');
@@ -319,7 +329,7 @@ const calculatedValue = useMemo(() =>
                       <div className={styles.withdrawalCardRow}>
                         <span className={styles.withdrawalCardLabel}>Amount</span>
                         <span className={styles.withdrawalCardValue}>
-                        {currency.symbol}{withdrawal.amount.toFixed(2)}
+                        {currency.symbol}{parseFloat(withdrawal.amount).toFixed(2)}
                         </span>
                       </div>
                       <div className={styles.withdrawalCardRow}>
@@ -332,7 +342,7 @@ const calculatedValue = useMemo(() =>
                       </div>
                       <div className={styles.withdrawalCardRow}>
                         <span className={styles.withdrawalCardLabel}>Reference</span>
-                        <span className={styles.withdrawalCardValue}>{withdrawal.transaction_reference || 'N/A'}</span>
+                        <span className={styles.withdrawalCardValue}> {withdrawal.reference || 'N/A'}</span>
                       </div>
                     </div>
                   );
@@ -365,10 +375,11 @@ const calculatedValue = useMemo(() =>
                    
                     return (
                       <tr key={withdrawal.id}>
-                        <td>{currency.symbol}{withdrawal.amount.toFixed(2)}</td>
-                      <td>{formatDate(withdrawal.created_at)}</td>
-                      <td>Interac Transfer</td>
-                      <td>{withdrawal.transaction_reference || 'Processing...'}</td>
+                        <td className={styles.px6}>with-{withdrawal.id}</td>
+                        <td className={styles.px6}>{currency.symbol}{parseFloat(withdrawal.amount).toFixed(2)}</td>
+                      <td className={styles.px6}>{formatDate(withdrawal.created_at)}</td>
+                      <td className={styles.px6}>Interac Transfer</td>
+                      <td className={styles.px6}>{withdrawal.reference || 'Processing...'}</td>
                       </tr>
                     );
                   })}

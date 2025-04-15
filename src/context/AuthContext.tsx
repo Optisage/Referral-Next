@@ -94,23 +94,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [initialized]);
 
 
-  useEffect(() => {
-    const interceptor = apiClient.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          handleUserStorage(null); // Clear invalid user
-          localStorage.removeItem('referral-token');
-        }
-        return Promise.reject(error);
-      }
-    );
-  
-    return () => {
-      apiClient.interceptors.response.eject(interceptor);
-    };
-  }, []);
-
   const handleUserStorage = (userData: User | null) => {
     setUser(userData);
     if (userData) {

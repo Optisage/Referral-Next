@@ -33,26 +33,23 @@ interface ReferralTransactionsResponse {
 }
 
 interface WithdrawalRequest {
-  id: string;
-  amount: number;
-  status: 'pending' | 'approved' | 'rejected';
+  id: number;
+  user_id: number;
+  amount: string;
+  point: string;
+  currency: string;
+  status: number; // 0 = pending, 1 = approved, 2 = rejected
   withdrawal_method: string;
+  bank_name?: string;
+  account_name: string;
+  account_number?: string;
+  sort_code?: string;
+  reference?: string;
+  meta_data: any[];
   created_at: string;
   updated_at: string;
-  transaction_reference?: string;
-  bank_name?:string;
-  account_name?:string;
-  email?:string;
-  currency?:string;
-  point?:string
 }
 
-interface WithdrawalLimit {
-  minimum_amount: number;
-  maximum_amount: number;
-  daily_limit: number;
-  currency: string;
-}
 
 
 interface ReferralAnalytics {
@@ -119,7 +116,7 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   const [analytics, setAnalytics] = useState<ReferralAnalytics | null>(null);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
   const [withdrawalHistory, setWithdrawalHistory] = useState<WithdrawalRequest[]>([]);
-  const [withdrawalLimits, setWithdrawalLimits] = useState<WithdrawalLimit | null>(null);
+
   const [transactions, setTransactions] = useState<ReferralTransaction[]>([]);
   const [transactionsPage, setTransactionsPage] = useState(1);
   const [hasMoreTransactions, setHasMoreTransactions] = useState(true);
@@ -155,8 +152,8 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   const fetchWithdrawalHistory = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/withdrawal/history');
-      setWithdrawalHistory(response.data.requests);
+      const response = await apiClient.get('/referral-system/withdrawal-requests');
+      setWithdrawalHistory(response.data.data);
     } catch (err) {
       setError('Failed to load withdrawal history');
       console.error('Withdrawal History Error:', err);
@@ -244,7 +241,7 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await Promise.all([fetchAnalytics(), fetchActivityFeed(), fetchTransactions(1)]);
+        await Promise.all([fetchAnalytics(), fetchActivityFeed(), fetchTransactions(1), fetchWithdrawalHistory()]);
       } catch (err) {
         setError('Failed to initialize referral data');
       }
