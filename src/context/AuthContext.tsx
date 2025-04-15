@@ -70,19 +70,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Initialize auth state
   useEffect(() => {
     if (typeof window !== 'undefined' && !initialized) {
-      const loadUser = () => {
+      const loadUser = async () => {
         try {
           const storedUser = localStorage.getItem('user');
-          if (storedUser) setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error('Auth initialization error:', error);
+          const token = localStorage.getItem('referral-token');
+          
+          if (storedUser && token) {
+            // Validate token with backend
+            await apiClient.get('/auth/validate-token'); // Add this endpoint
+            setUser(JSON.parse(storedUser));
+          }
+        } catch (err) {
+          // Clear invalid credentials
           localStorage.removeItem('user');
+          localStorage.removeItem('referral-token');
+          setUser(null);
+        } finally {
+          setLoading(false);
+          setInitialized(true);
         }
       };
       
       loadUser();
-      setLoading(false);
-      setInitialized(true);
     }
   }, [initialized]);
 
