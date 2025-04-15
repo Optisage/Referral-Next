@@ -32,8 +32,11 @@ export default function Login() {
   const otpRefs = Array(6).fill(null).map(() => useRef<HTMLInputElement>(null));
 
   useEffect(() => {
-    if (user) router.push('/dashboard');
-  }, [user, router]);
+    // Wait until auth state is fully initialized
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault();

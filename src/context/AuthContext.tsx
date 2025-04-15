@@ -70,30 +70,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Initialize auth state
   useEffect(() => {
     if (typeof window !== 'undefined' && !initialized) {
-      const loadUser = async () => {
+      const loadUser = async () => { // Make this async
         try {
           const storedUser = localStorage.getItem('user');
           const token = localStorage.getItem('referral-token');
           
           if (storedUser && token) {
-            // Validate token with backend
-            await apiClient.get('/auth/validate-token'); // Add this endpoint
+        
             setUser(JSON.parse(storedUser));
           }
         } catch (err) {
-          // Clear invalid credentials
           localStorage.removeItem('user');
           localStorage.removeItem('referral-token');
           setUser(null);
         } finally {
-          setLoading(false);
-          setInitialized(true);
+          setLoading(false); // Move inside finally
+          setInitialized(true); // Move inside finally
         }
       };
       
-      loadUser();
+      loadUser(); // Call async function
     }
   }, [initialized]);
+
+
+  useEffect(() => {
+    const interceptor = apiClient.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          handleUserStorage(null); // Clear invalid user
+          localStorage.removeItem('referral-token');
+        }
+        return Promise.reject(error);
+      }
+    );
+  
+    return () => {
+      apiClient.interceptors.response.eject(interceptor);
+    };
+  }, []);
 
   const handleUserStorage = (userData: User | null) => {
     setUser(userData);
@@ -157,30 +173,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const saveSettings = useCallback(async (data: any) => {
     try {
       const { data: response } = await apiClient.put('/customer/settings', data);
-      
-      // Safely update user data with proper response structure
-      const updatedUser = user ? {
-        ...user,
-        first_name: response?.first_name || user.first_name,
-        last_name: response?.last_name || user.last_name,
-        email: response?.email || user.email,
-        phone: response?.phone || user.phone,
-        group_name: response?.group_name || user.group_name
-      } : null;
   
-      if (updatedUser) {
-        // Update both context and localStorage
-
-        setUser(updatedUser);
+      // Use functional update to ensure fresh state and avoid dependencies
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+  
+        // Merge API response with existing user data
+        const updatedUser = {
+          ...prevUser,
+          first_name: response?.first_name ?? prevUser.first_name,
+          last_name: response?.last_name ?? prevUser.last_name,
+          email: response?.email ?? prevUser.email,
+          phone: response?.phone ?? prevUser.phone,
+          group_name: response?.group_name ?? prevUser.group_name,
+        };
+  
+        // Update localStorage atomically with state
         localStorage.setItem('user', JSON.stringify(updatedUser));
-      }
-      
+        return updatedUser;
+      });
+  
       return response;
     } catch (error) {
       console.error('Settings update failed:', error);
       throw error;
     }
-  }, [user]);
+  }, []); // Empty dependency array - no stale closures
 
   const register = useCallback(async (userData: Omit<User, 'id' | 'referralLink'>) => {
     setLoading(true);
