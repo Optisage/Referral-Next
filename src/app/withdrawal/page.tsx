@@ -28,7 +28,8 @@ export default function Withdrawal() {
     withdrawalHistory, 
     requestWithdrawal, 
     isLoading: referralLoading,
-    error: referralError
+    error: referralError,
+    fetchWithdrawalHistory
   } = useReferral();
 
   // Add status mapping function
@@ -68,6 +69,12 @@ const calculatedValue = useMemo(() =>
   useEffect(() => {
     if (!loading && !user) router.push('/auth/login');
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (user && !loading) {
+      fetchWithdrawalHistory();
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     setPageLoading(false);
