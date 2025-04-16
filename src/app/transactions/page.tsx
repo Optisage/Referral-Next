@@ -350,7 +350,7 @@ export default function Transactions() {
         )}
       </div>
 
-      {(referralLoading || !transactions.length) && <Preloader fullScreen state="transactions" />}
+      {referralLoading && <Preloader fullScreen state="transactions" />}
     </div>
   );
 }
