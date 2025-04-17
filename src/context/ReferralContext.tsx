@@ -57,6 +57,10 @@ interface ReferralAnalytics {
   points_earned: number;
   conversion_rate: number;
   total_amount: number;
+  total_referrals_month_growth: number;
+  points_earned_month_growth: number;
+  conversion_rate_month_growth: number;
+  total_amount_month_growth: number;
 }
 
 interface ActivityFeedItem {
@@ -196,9 +200,16 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
       if (Array.isArray(data)) {
         const analyticsData: ReferralAnalytics = {
           total_referrals: data.find(item => item.metric === 'total referrals')?.value || 0,
+          total_referrals_month_growth: data.find(item => item.metric === 'total referrals')?.month_growth || 0,
+          
           points_earned: data.find(item => item.metric === 'total points')?.value || 0,
+          points_earned_month_growth: data.find(item => item.metric === 'total points')?.month_growth || 0,
+          
           conversion_rate: data.find(item => item.metric === 'conversion rate')?.value || 0,
+          conversion_rate_month_growth: data.find(item => item.metric === 'conversion rate')?.month_growth || 0,
+          
           total_amount: Number(data.find(item => item.metric === 'total amount')?.value || 0),
+          total_amount_month_growth: data.find(item => item.metric === 'total amount')?.month_growth || 0,
         };
   
         setAnalytics(analyticsData);
@@ -213,6 +224,7 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     }
   }, []);
 
+  
   const fetchActivityFeed = useCallback(async () => {
     try {
       setIsLoading(true);

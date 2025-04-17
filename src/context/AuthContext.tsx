@@ -41,6 +41,7 @@ interface AuthContextType {
   loggingOut: boolean;
   login: (whatsappNumber: string) => Promise<void>;
   logout: () => Promise<void>;
+  fetchSettings: () => Promise<void>;
   verifyOtp: (identifier: string, otp: string) => Promise<boolean>;
   sendOtp: (identifier: string) => Promise<void>;
   register: (userData: Omit<User, 'id' | 'referralLink'>) => Promise<void>;
@@ -94,6 +95,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [initialized]);
 
 
+  const fetchSettings = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get('/customer/settings');
+      setUser(prev => {
+        if (!prev) return null;
+        // Only update if there's actual changes
+        if (JSON.stringify(prev) === JSON.stringify({ ...prev, ...data })) {
+          return prev;
+        }
+        const updatedUser = { ...prev, ...data };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return updatedUser;
+      });
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+      throw error;
+    }
+  }, []);
+
   const handleUserStorage = (userData: User | null) => {
     setUser(userData);
     if (userData) {
@@ -103,12 +123,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const login = useCallback(async (phone: string) => {
+  const login = useCallback(async (email: string) => {
     setLoading(true);
     try {
       // Real API call
       const { data } = await apiClient.post('/referral-system/login', {
-        phone,
+        email,
       });
       
     } catch (error) {
@@ -130,22 +150,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  const verifyOtp = useCallback(async (phone: string, otp: string) => {
+  const verifyOtp = useCallback(async (email: string, otp: string) => {
     try {
-      const { data } = await apiClient.post('/referral-system/verify-otp', { phone, otp });
+      const { data } = await apiClient.post('/referral-system/verify-otp', { email, otp });
       handleUserStorage(data?.user);
       localStorage.setItem('referral-token', data.token);
       console.log(data);
       return data;
     } catch (error) {
       console.error('OTP verification failed:', error);
-      return false;
+      throw error;
+      //return false;
     }
   }, []);
 
-  const sendOtp = useCallback(async (identifier: string) => {
+  const sendOtp = useCallback(async (email: string) => {
     try {
-      await apiClient.post('/auth/send-otp', { identifier });
+      await apiClient.post('/auth/send-otp', { email });
     } catch (error) {
       console.error('OTP send failed:', error);
       throw error;
@@ -214,7 +235,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     register,
     setPageLoading,
     getCountryFromPhoneNumber,
-    saveSettings
+    saveSettings,
+    fetchSettings
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -116,9 +116,9 @@ useEffect(() => {
             <div className="p-3 transition-transform transform rounded-full bg-whatsapp-light-green group-hover:scale-110">
               <FaUsers className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>
-              {analytics?.total_referrals ?? 0}% this week
+            <div className="items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs"></span>
+              {analytics?.total_referrals_month_growth ?? 0}% this month
             </div>
           </div>
           <div className="mt-4">
@@ -135,9 +135,9 @@ useEffect(() => {
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaStar className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>
-              {analytics?.points_earned ?? 0}% this week
+            <div className="items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs"></span>
+              {analytics?.points_earned_month_growth ?? 0}% this month
             </div>
           </div>
           <div className="mt-4">
@@ -154,9 +154,9 @@ useEffect(() => {
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaExchangeAlt className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>
-              {analytics?.conversion_rate ?? 0}% trend
+            <div className="items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs"></span>
+              {analytics?.conversion_rate_month_growth ?? 0}% this month
             </div>
           </div>
           <div className="mt-4">
@@ -173,9 +173,9 @@ useEffect(() => {
             <div className="p-3 rounded-full bg-whatsapp-light-green">
               <FaMoneyBillWave className="w-6 h-6 text-whatsapp-dark-green" />
             </div>
-            <div className="items-center hidden px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
-              <span className="mr-1 text-xs">+</span>
-              {analytics?.total_amount ?? 0}th rank
+            <div className="items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
+              <span className="mr-1 text-xs"></span>
+              {analytics?.total_amount_month_growth ?? 0}this month
             </div>
           </div>
           <div className="mt-4">

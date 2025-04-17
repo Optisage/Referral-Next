@@ -9,7 +9,7 @@ import Preloader from '@/components/Preloader';
 
 export default function Settings() {
   const router = useRouter();
-  const { user, loading, saveSettings } = useAuth();
+  const { user, loading, saveSettings, fetchSettings  } = useAuth();
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -18,6 +18,9 @@ export default function Settings() {
     }
   }, [user, loading, router]);
   
+  // Add new state for initial loading
+const [initialLoading, setInitialLoading] = useState(true);
+
   const [activeTab, setActiveTab] = useState('profile');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -43,6 +46,35 @@ export default function Settings() {
       setWhatsappChannelName(user.group_name);
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        await fetchSettings();
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+  
+    if (user && initialLoading) {
+      loadSettings();
+    }
+  }, [user, initialLoading, fetchSettings]);
+
+  // Update the notification states initialization
+useEffect(() => {
+  if (user) {
+    setFullName(`${user.first_name} ${user.last_name}`.trim());
+    setEmail(user.email);
+    setWhatsappNumber(user.phone);
+    setWhatsappChannelName(user.group_name);
+   
+  }
+}, [user]);
+
+  
   
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,8 +84,7 @@ export default function Settings() {
       setErrorMessage('');
       
       await saveSettings({
-       
-          name: fullName,
+        name: fullName,
           email,
           phone: whatsappNumber,
           group_name: whatsappChannelName
@@ -73,34 +104,9 @@ export default function Settings() {
     }
   };
   
-  const handleNotificationSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      setSaving(true);
-      setErrorMessage('');
-      
-      await saveSettings({
-        notifications: {
-          email: emailNotifications,
-          whatsapp: whatsappNotifications
-        }
-      });
-      
-      setSuccessMessage('Notification preferences updated successfully');
-      setFormSubmitted(true);
-      setTimeout(() => {
-        setFormSubmitted(false);
-        setSuccessMessage('');
-      }, 3000);
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to save notifications');
-    } finally {
-      setSaving(false);
-    }
-  };
+
   
-  if (loading || !user) {
+  if (loading || initialLoading ) {
     return <Preloader fullScreen state="settings" />;
   }
   
@@ -226,7 +232,7 @@ export default function Settings() {
             {activeTab === 'notifications' && (
               <>
                 <h2 className={styles.contentTitle}>Notification Preferences</h2>
-                <form onSubmit={handleNotificationSubmit}>
+                <form >
                   <div className={styles.formFields}>
                     <div className={styles.formGroup}>
                       <div className={styles.formLabel}>

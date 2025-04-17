@@ -93,7 +93,7 @@ export default function Register() {
         throw new Error('Please enter a valid OTP');
       }
 
-      const verified = await verifyOtp(fullWhatsappNumber, otpValue);
+      const verified = await verifyOtp(email, otpValue);
       if (!verified) throw new Error('OTP verification failed');
 
       setShowNotification(true);

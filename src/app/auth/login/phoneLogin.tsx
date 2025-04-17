@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { FaPhone, FaExclamationCircle } from 'react-icons/fa';
 import styles from './login.module.css';
 import Preloader from '@/components/Preloader';
+import CountryCodeSelect from '@/components/CountryCodeSelect';
 import SlideNotification from '@/components/SlideNotification';
 
 export default function Login() {
@@ -20,7 +21,8 @@ export default function Login() {
   } = useAuth();
   const router = useRouter();
   
-  const [email, setEmail] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function Login() {
 
   useEffect(() => {
     if (!loading && user === null) {
-      router.replace('/auth/login');
+      router.replace('/auth/login'); // avoids history buildup
     }
   }, [loading, user, router]);
 
@@ -41,7 +43,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email);
+      const phoneDigits = whatsappNumber.replace(/\D/g, '');
+      const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
+      
+      await login(fullWhatsappNumber);
       setOtpSent(true);
       setTimeout(() => otpRefs[0].current?.focus(), 100);
     } catch (err) {
@@ -52,19 +57,12 @@ export default function Login() {
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    // Allow backspace by checking for empty string or digits
-    if (!/^$|^\d+$/.test(value)) return;
-  
+    if (!/^\d+$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-  
-    // Handle backspace
-    if (!value && index > 0) {
-      otpRefs[index - 1].current?.focus();
-    }
-    // Handle forward focus
-    else if (value && index < 5) {
+
+    if (value && index < 5) {
       otpRefs[index + 1].current?.focus();
     }
   };
@@ -73,22 +71,19 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-  
+
     try {
+      const phoneDigits = whatsappNumber.replace(/\D/g, '');
+      const fullWhatsappNumber = `${countryCode}${phoneDigits}`;
       const otpValue = otp.join('');
+
       if (otpValue.length !== 6) throw new Error('Please enter all 6 digits');
       
-      // Wait for verification to complete
-      const result = await verifyOtp(email, otpValue);
-      
-      // Only show success if verification actually succeeded
-      if (result) {
-        setShowNotification(true);
-        setTimeout(() => router.push('/dashboard'), 2500);
-      }
+      await verifyOtp(fullWhatsappNumber, otpValue);
+      setShowNotification(true);
+      setTimeout(() => router.push('/dashboard'), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed');
-      setShowNotification(false); // Ensure success notification doesn't show
     } finally {
       setLoading(false);
     }
@@ -130,8 +125,8 @@ export default function Login() {
         </h2>
         <p className={styles.subtitle}>
           {otpSent 
-            ? `Verification code sent to ${email}`
-            : 'Enter your email address to receive a one-time password'}
+            ? `Verification code sent to ${countryCode}${whatsappNumber}`
+            : 'Enter your WhatsApp number to receive a one-time password'}
         </p>
 
         <div className={styles.formCard}>
@@ -145,20 +140,17 @@ export default function Login() {
           {!otpSent ? (
             <form className={styles.form} onSubmit={handleSendOtp}>
               <div className={styles.formGroup}>
-                <label htmlFor="email" className={styles.formLabel}>
-                  Email Address
+                <label htmlFor="whatsappNumber" className={styles.formLabel}>
+                  WhatsApp Number
                 </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-[45px] w-full border border-gray-200 p-2 focus:outline-none rounded-lg"
-                  placeholder="Enter your email"
-                  required
+                <CountryCodeSelect
+                  value={countryCode}
+                  onChange={setCountryCode}
+                  phone={whatsappNumber}
+                  onPhoneChange={setWhatsappNumber}
                 />
-                <p className='mt-2 text-xs font-semibold text-slate-500'>
-                  We'll send a verification code to this email address
+                <p className={styles.phoneHint}>
+                  We'll send a verification code to this WhatsApp number
                 </p>
               </div>
               
