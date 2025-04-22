@@ -181,7 +181,7 @@ const calculatedValue = useMemo(() =>
             <div className={styles.text4xl}>{availablePoints.toLocaleString()}</div>
             <div className={styles.flexItems}>
               <FaExchangeAlt className={styles.icon} />
-              <span>1 point = {currency.symbol}{POINTS_TO_CASH_RATE}</span>
+              <span>100 point = {currency.symbol}1</span>
             </div>
           </div>
 

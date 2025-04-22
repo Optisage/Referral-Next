@@ -131,7 +131,7 @@ export default function Login() {
         <p className={styles.subtitle}>
           {otpSent 
             ? `Verification code sent to ${email}`
-            : 'Enter your email address to receive a one-time password'}
+            : 'Sign in to manage your referrals'}
         </p>
 
         <div className={styles.formCard}>
