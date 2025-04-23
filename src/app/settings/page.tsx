@@ -9,7 +9,7 @@ import Preloader from '@/components/Preloader';
 
 export default function Settings() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, saveSettings, fetchSettings  } = useAuth();
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -18,11 +18,15 @@ export default function Settings() {
     }
   }, [user, loading, router]);
   
+  // Add new state for initial loading
+const [initialLoading, setInitialLoading] = useState(true);
+
   const [activeTab, setActiveTab] = useState('profile');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [saving, setSaving] = useState(false);
-  
+   
   // Profile form fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -36,54 +40,73 @@ export default function Settings() {
   // Set initial form values when user data is loaded
   useEffect(() => {
     if (user) {
-      setFullName(user.fullName);
+      setFullName(`${user.first_name} ${user.last_name}`.trim());
       setEmail(user.email);
-      setWhatsappNumber(user.whatsappNumber);
-      setWhatsappChannelName(user.whatsappChannelName);
+      setWhatsappNumber(user.phone);
+      setWhatsappChannelName(user.group_name);
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        await fetchSettings();
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+  
+    if (user && initialLoading) {
+      loadSettings();
+    }
+  }, [user, initialLoading, fetchSettings]);
+
+  // Update the notification states initialization
+useEffect(() => {
+  if (user) {
+    setFullName(`${user.first_name} ${user.last_name}`.trim());
+    setEmail(user.email);
+    setWhatsappNumber(user.phone);
+    setWhatsappChannelName(user.group_name);
+   
+  }
+}, [user]);
+
+  
   
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
     try {
       setSaving(true);
-      // In a real app, this would call an API to update the profile
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setErrorMessage('');
+      
+      await saveSettings({
+        name: fullName,
+          email,
+          phone: whatsappNumber,
+          group_name: whatsappChannelName
+       
+      });
+      
       setSuccessMessage('Profile updated successfully');
       setFormSubmitted(true);
-      
       setTimeout(() => {
         setFormSubmitted(false);
         setSuccessMessage('');
       }, 3000);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to save profile');
     } finally {
       setSaving(false);
     }
   };
   
-  const handleNotificationSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      setSaving(true);
-      // In a real app, this would call an API to update notification settings
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSuccessMessage('Notification preferences updated successfully');
-      setFormSubmitted(true);
-      
-      setTimeout(() => {
-        setFormSubmitted(false);
-        setSuccessMessage('');
-      }, 3000);
-    } finally {
-      setSaving(false);
-    }
-  };
+
   
-  if (loading || !user) {
+  if (loading || initialLoading ) {
     return <Preloader fullScreen state="settings" />;
   }
   
@@ -97,6 +120,12 @@ export default function Settings() {
       {formSubmitted && successMessage && (
         <div className={styles.successAlert} role="alert">
           <span>{successMessage}</span>
+        </div>
+      )}
+      
+      {errorMessage && (
+        <div className={styles.errorAlert} role="alert">
+          <span>{errorMessage}</span>
         </div>
       )}
       
@@ -114,12 +143,14 @@ export default function Settings() {
               >
                 <FaUser className={styles.navIcon} /> Profile
               </button>
+              {/** 
               <button 
                 className={`${styles.navButton} ${activeTab === 'notifications' ? styles.activeNavButton : ''}`}
                 onClick={() => setActiveTab('notifications')}
               >
                 <FaBell className={styles.navIcon} /> Notifications
               </button>
+              */}
             </nav>
           </div>
         </div>
@@ -201,7 +232,7 @@ export default function Settings() {
             {activeTab === 'notifications' && (
               <>
                 <h2 className={styles.contentTitle}>Notification Preferences</h2>
-                <form onSubmit={handleNotificationSubmit}>
+                <form >
                   <div className={styles.formFields}>
                     <div className={styles.formGroup}>
                       <div className={styles.formLabel}>
