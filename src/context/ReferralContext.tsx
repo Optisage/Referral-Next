@@ -73,6 +73,12 @@ interface ActivityFeedItem {
   meta_data: any[];
 }
 
+interface PaginationState {
+  currentPage: number;
+  lastPage: number;
+  total: number;
+}
+
 interface ReferralContextType {
   analytics: ReferralAnalytics | null;
   activityFeed: ActivityFeedItem[];
@@ -96,8 +102,7 @@ interface ReferralContextType {
   refreshAnalytics: () => Promise<void>;
   refreshActivityFeed: () => Promise<void>;
   transactions: ReferralTransaction[];
-  transactionsPage: number;
-  hasMoreTransactions: boolean;
+  pagination: PaginationState;
   fetchTransactions: (page?: number) => Promise<void>;
 
 }
@@ -120,10 +125,13 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   const [analytics, setAnalytics] = useState<ReferralAnalytics | null>(null);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
   const [withdrawalHistory, setWithdrawalHistory] = useState<WithdrawalRequest[]>([]);
-
+  const [pagination, setPagination] = useState<PaginationState>({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0
+  });
   const [transactions, setTransactions] = useState<ReferralTransaction[]>([]);
-  const [transactionsPage, setTransactionsPage] = useState(1);
-  const [hasMoreTransactions, setHasMoreTransactions] = useState(true);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,16 +141,14 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     try {
       setIsLoading(true);
       const response = await apiClient.get(`/referral-system/transactions?page=${page}`);
-      const responseData: ReferralTransactionsResponse = response.data;
-
-      setTransactions(prev => 
-        page === 1 ? 
-        responseData.data : 
-        [...prev, ...responseData.data]
-      );
+      const responseData = response.data;
       
-      setTransactionsPage(page);
-      setHasMoreTransactions(responseData.current_page < responseData.last_page);
+      setTransactions(responseData.data);
+      setPagination({
+        currentPage: responseData.current_page,
+        lastPage: responseData.last_page,
+        total: responseData.total
+      });
     } catch (err) {
       setError('Failed to load transactions');
       console.error('Transactions Error:', err);
@@ -278,13 +284,9 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     fetchWithdrawalHistory,
     requestWithdrawal,
     transactions,
-    transactionsPage,
-    hasMoreTransactions,
+    pagination,
     fetchTransactions,
-  }), [analytics, activityFeed, isLoading, error, fetchAnalytics, fetchActivityFeed,fetchWithdrawalHistory,requestWithdrawal, transactions,
-    transactionsPage,
-    hasMoreTransactions,
-    fetchTransactions,]);
+  }), [analytics, activityFeed, isLoading, error, fetchAnalytics, fetchActivityFeed,fetchWithdrawalHistory,requestWithdrawal, transactions,  pagination, fetchTransactions,]);
 
   return (
     <ReferralContext.Provider value={value}>
