@@ -26,10 +26,38 @@ const CURRENCY_MAP = {
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading, setPageLoading } = useAuth();
-  const { analytics, activityFeed, isLoading, error, copyReferralLink,refreshAnalytics, refreshActivityFeed } = useReferral();
+  const { analytics, activityFeed, isLoading, error, copyReferralLink,refreshAnalytics, refreshActivityFeed, activityPagination, } = useReferral();
   // Add state for notification visibility
 const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [currentActivityPage, setCurrentActivityPage] = useState(1);
+
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        await Promise.all([
+          refreshAnalytics(), 
+          refreshActivityFeed(currentActivityPage) // Pass current page
+        ]);
+      } catch (error) {
+        console.error('Failed to refresh dashboard data:', error);
+      }
+    };
+    refreshData();
+  }, [refreshAnalytics, refreshActivityFeed, currentActivityPage]);
+
+  // Pagination handlers
+  const handleActivityPreviousPage = () => {
+    if (currentActivityPage > 1) {
+      setCurrentActivityPage(prev => prev - 1);
+    }
+  };
+
+  const handleActivityNextPage = () => {
+    if (currentActivityPage < activityPagination.lastPage) {
+      setCurrentActivityPage(prev => prev + 1);
+    }
+  };
 
   // Points conversion calculations
   const POINTS_TO_CASH_RATE = 100;
@@ -272,6 +300,29 @@ useEffect(() => {
       No recent activity to display.
     </div>
   )}
+
+
+{activityFeed?.length > 0 && (
+          <div className={styles.paginationContainer}>
+            <button
+              className={styles.paginationButton}
+              onClick={handleActivityPreviousPage}
+              disabled={currentActivityPage === 1 || isLoading}
+            >
+              Previous
+            </button>
+            <span className={styles.pageNumber}>
+              Page {currentActivityPage} of {activityPagination.lastPage}
+            </span>
+            <button
+              className={styles.paginationButton}
+              onClick={handleActivityNextPage}
+              disabled={currentActivityPage >= activityPagination.lastPage || isLoading}
+            >
+              Next
+            </button>
+          </div>
+        )}
 </div>
     </div>
   );
