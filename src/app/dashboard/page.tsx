@@ -26,10 +26,38 @@ const CURRENCY_MAP = {
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading, setPageLoading } = useAuth();
-  const { analytics, activityFeed, isLoading, error, copyReferralLink,refreshAnalytics, refreshActivityFeed } = useReferral();
+  const { analytics, activityFeed, isLoading, error, copyReferralLink,refreshAnalytics, refreshActivityFeed, activityPagination, } = useReferral();
   // Add state for notification visibility
 const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [currentActivityPage, setCurrentActivityPage] = useState(1);
+
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        await Promise.all([
+          refreshAnalytics(), 
+          refreshActivityFeed(currentActivityPage) // Pass current page
+        ]);
+      } catch (error) {
+        console.error('Failed to refresh dashboard data:', error);
+      }
+    };
+    refreshData();
+  }, [refreshAnalytics, refreshActivityFeed, currentActivityPage]);
+
+  // Pagination handlers
+  const handleActivityPreviousPage = () => {
+    if (currentActivityPage > 1) {
+      setCurrentActivityPage(prev => prev - 1);
+    }
+  };
+
+  const handleActivityNextPage = () => {
+    if (currentActivityPage < activityPagination.lastPage) {
+      setCurrentActivityPage(prev => prev + 1);
+    }
+  };
 
   // Points conversion calculations
   const POINTS_TO_CASH_RATE = 100;
@@ -240,38 +268,56 @@ useEffect(() => {
   </p>
 
   {activityFeed?.length > 0 ? (
-     <div className={styles.activitySection}>
-     <h2 className={styles.sectionTitle}>
-       <FaUsers className="mr-2 text-whatsapp-green" /> Live Activity Feed
-     </h2>
-     <div className="divide-y">
-       {activityFeed.map((referral) => (
-         <div key={referral.id} className="flex items-center justify-between px-3 py-4 transition-colors rounded-lg hover:bg-gray-50">
-           <div>
-             <p className="flex items-center font-medium">
-               <span className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
-               {referral.description} 
-             </p>
-             <p className="ml-4 text-sm text-gray-500">
-             {dayjs(referral.created_at).fromNow()}
-             </p>
-           </div>
-           <div className={`font-medium px-3 py-1 rounded-full text-sm ${
-             referral.points === '0.00' 
-               ? 'text-blue-700 bg-blue-50' 
-               : 'text-green-700 bg-green-50'
-           }`}>
-             {referral.points === '0.00' ? '0 points' : `+${referral.points} points`}
-           </div>
-         </div>
-       ))}
-     </div>
-   </div>
+      <div className="divide-y">
+      {activityFeed.map((referral) => (
+        <div key={referral.id} className="flex flex-col items-start justify-between px-2 py-3 transition-colors rounded-lg sm:flex-row sm:items-center sm:px-3 hover:bg-gray-50">
+          <div className="w-full">
+            <p className="flex items-center text-sm sm:text-base">
+              <span className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
+              {referral.description}
+            </p>
+            <p className="ml-4 text-xs text-gray-500 sm:text-sm">
+              {dayjs(referral.created_at).fromNow()}
+            </p>
+          </div>
+          <div className={` w-[150px] !h-fit mt-2 sm:mt-0 font-medium px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm ${
+            referral.points === '0.00' 
+              ? 'text-blue-700 bg-blue-50' 
+              : 'text-green-700 bg-green-50'
+          }`}>
+            {referral.points === '0.00' ? '0 points' : `+${referral.points} points`}
+          </div>
+        </div>
+      ))}
+    </div>
   ) : (
     <div className="p-4 mt-2 text-sm text-center text-gray-500 rounded-lg bg-gray-50">
       No recent activity to display.
     </div>
   )}
+
+
+{activityFeed?.length > 0 && (
+          <div className={styles.paginationContainer}>
+            <button
+              className={styles.paginationButton}
+              onClick={handleActivityPreviousPage}
+              disabled={currentActivityPage === 1 || isLoading}
+            >
+              Previous
+            </button>
+            <span className={styles.pageNumber}>
+              Page {currentActivityPage} of {activityPagination.lastPage}
+            </span>
+            <button
+              className={styles.paginationButton}
+              onClick={handleActivityNextPage}
+              disabled={currentActivityPage >= activityPagination.lastPage || isLoading}
+            >
+              Next
+            </button>
+          </div>
+        )}
 </div>
     </div>
   );

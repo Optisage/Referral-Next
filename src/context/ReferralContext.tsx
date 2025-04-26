@@ -73,6 +73,12 @@ interface ActivityFeedItem {
   meta_data: any[];
 }
 
+interface PaginationState {
+  currentPage: number;
+  lastPage: number;
+  total: number;
+}
+
 interface ReferralContextType {
   analytics: ReferralAnalytics | null;
   activityFeed: ActivityFeedItem[];
@@ -94,11 +100,11 @@ interface ReferralContextType {
   copyReferralLink: (userId: string) => void;
   generateReferralLink: (userId: string) => string;
   refreshAnalytics: () => Promise<void>;
-  refreshActivityFeed: () => Promise<void>;
+  refreshActivityFeed: (page?: number) => Promise<void>;
   transactions: ReferralTransaction[];
-  transactionsPage: number;
-  hasMoreTransactions: boolean;
+  pagination: PaginationState;
   fetchTransactions: (page?: number) => Promise<void>;
+  activityPagination: PaginationState;
 
 }
 
@@ -120,10 +126,18 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   const [analytics, setAnalytics] = useState<ReferralAnalytics | null>(null);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
   const [withdrawalHistory, setWithdrawalHistory] = useState<WithdrawalRequest[]>([]);
-
+  const [pagination, setPagination] = useState<PaginationState>({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0
+  });
+  const [activityPagination, setActivityPagination] = useState<PaginationState>({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0
+  });
   const [transactions, setTransactions] = useState<ReferralTransaction[]>([]);
-  const [transactionsPage, setTransactionsPage] = useState(1);
-  const [hasMoreTransactions, setHasMoreTransactions] = useState(true);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,16 +147,14 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     try {
       setIsLoading(true);
       const response = await apiClient.get(`/referral-system/transactions?page=${page}`);
-      const responseData: ReferralTransactionsResponse = response.data;
-
-      setTransactions(prev => 
-        page === 1 ? 
-        responseData.data : 
-        [...prev, ...responseData.data]
-      );
+      const responseData = response.data;
       
-      setTransactionsPage(page);
-      setHasMoreTransactions(responseData.current_page < responseData.last_page);
+      setTransactions(responseData.data);
+      setPagination({
+        currentPage: responseData.current_page,
+        lastPage: responseData.last_page,
+        total: responseData.total
+      });
     } catch (err) {
       setError('Failed to load transactions');
       console.error('Transactions Error:', err);
@@ -225,22 +237,31 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
   }, []);
 
   
-  const fetchActivityFeed = useCallback(async () => {
+
+
+
+  const fetchActivityFeed = useCallback(async (page: number = 1) => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/referral-system/dashboard/activity-feeds');
+      const response = await apiClient.get(`/referral-system/dashboard/activity-feeds?page=${page}`);
       const rawActivities = response?.data?.data || [];
-  
+      
+      setActivityPagination({
+        currentPage: response.data.current_page,
+        lastPage: response.data.last_page,
+        total: response.data.total
+      });
+
       const mappedActivities: ActivityFeedItem[] = rawActivities.map((item: any) => ({
-        id: item.id.toString(),
-        type: 'referral', // Assuming it's always referral based on description
-        title: item.description, // Can be customized if needed
+        id: item.id,
+        user_id: item.user_id,
         description: item.description,
-        points:item.points,
-        timestamp: item.created_at,
-        metadata: {}, // If needed, populate based on future structure
+        points: item.points,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        meta_data: item.meta_data
       }));
-  
+
       setActivityFeed(mappedActivities);
     } catch (err) {
       setError('Failed to load activity feed');
@@ -249,6 +270,7 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
       setIsLoading(false);
     }
   }, []);
+  
 
 
 
@@ -278,13 +300,10 @@ export const ReferralProvider = ({ children }: ReferralProviderProps) => {
     fetchWithdrawalHistory,
     requestWithdrawal,
     transactions,
-    transactionsPage,
-    hasMoreTransactions,
+    pagination,
     fetchTransactions,
-  }), [analytics, activityFeed, isLoading, error, fetchAnalytics, fetchActivityFeed,fetchWithdrawalHistory,requestWithdrawal, transactions,
-    transactionsPage,
-    hasMoreTransactions,
-    fetchTransactions,]);
+    activityPagination,
+  }), [analytics, activityFeed, isLoading, error, fetchAnalytics, fetchActivityFeed,fetchWithdrawalHistory,requestWithdrawal, transactions,  pagination, fetchTransactions,activityPagination]);
 
   return (
     <ReferralContext.Provider value={value}>

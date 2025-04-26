@@ -31,10 +31,11 @@ interface Transaction {
 export default function Transactions() {
   const router = useRouter();
   const { user, loading, setPageLoading } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
   const { 
     transactions, 
     fetchTransactions,
-    hasMoreTransactions,
+    pagination,
     isLoading: referralLoading
   } = useReferral();
   
@@ -46,9 +47,9 @@ export default function Transactions() {
 
   useEffect(() => {
     if (user && !loading) {
-      fetchTransactions(1);
+      fetchTransactions(currentPage); // Use currentPage instead of hardcoded 1
     }
-  }, [user, loading, fetchTransactions]);
+  }, [user, loading, fetchTransactions, currentPage]);
 
   useEffect(() => {
     setPageLoading(false);
@@ -65,44 +66,47 @@ export default function Transactions() {
     direction: 'descending',
   });
 
-  const formattedTransactions = useMemo(() => transactions?.map(t => ({
-    ...t,
-    created_at: new Date(t.created_at),
-    status: t.status.toLowerCase()
-  })), [transactions]);
-
-  const filteredTransactions = useMemo(() => {
-    return formattedTransactions?.filter(transaction => {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        transaction.referred.first_name.toLowerCase().includes(searchLower) ||
-        transaction.referred.last_name.toLowerCase().includes(searchLower) ||
-        transaction.referred.email.toLowerCase().includes(searchLower);
-      
-      const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [formattedTransactions, searchTerm, statusFilter]);
-
-  const sortedTransactions = useMemo(() => {
-    return [...filteredTransactions].sort((a, b) => {
-      const sortKey = sortConfig.key;
-      const direction = sortConfig.direction === 'ascending' ? 1 : -1;
-
-      if (sortKey === 'created_at') {
-        return direction * (a.created_at.getTime() - b.created_at.getTime());
-      }
-      if (sortKey === 'amount' || sortKey === 'points') {
-        return direction * (a[sortKey] - b[sortKey]);
-      }
-      if (sortKey === 'referred') {
-        const aName = `${a.referred.first_name} ${a.referred.last_name}`.toLowerCase();
-        const bName = `${b.referred.first_name} ${b.referred.last_name}`.toLowerCase();
-        return direction * aName.localeCompare(bName);
-      }
-      return 0;
-    });
-  }, [filteredTransactions, sortConfig]);
+    // Filtering and sorting
+    const formattedTransactions = useMemo(() => 
+      (transactions || []).map(t => ({
+        ...t,
+        created_at: new Date(t.created_at),
+        status: t.status.toLowerCase()
+      })), 
+    [transactions]);
+  
+    const filteredTransactions = useMemo(() => {
+      return formattedTransactions?.filter(transaction => {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          transaction.referred.first_name.toLowerCase().includes(searchLower) ||
+          transaction.referred.last_name.toLowerCase().includes(searchLower) ||
+          transaction.referred.email.toLowerCase().includes(searchLower);
+        
+        const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+    }, [formattedTransactions, searchTerm, statusFilter]);
+  
+    const sortedTransactions = useMemo(() => {
+      return [...filteredTransactions].sort((a, b) => {
+        const sortKey = sortConfig.key;
+        const direction = sortConfig.direction === 'ascending' ? 1 : -1;
+  
+        if (sortKey === 'created_at') {
+          return direction * (a.created_at.getTime() - b.created_at.getTime());
+        }
+        if (sortKey === 'amount' || sortKey === 'points') {
+          return direction * (a[sortKey] - b[sortKey]);
+        }
+        if (sortKey === 'referred') {
+          const aName = `${a.referred.first_name} ${a.referred.last_name}`.toLowerCase();
+          const bName = `${b.referred.first_name} ${b.referred.last_name}`.toLowerCase();
+          return direction * aName.localeCompare(bName);
+        }
+        return 0;
+      });
+    }, [filteredTransactions, sortConfig]);
 
   const handleSort = (key: keyof Transaction) => {
     setSortConfig(prev => ({
@@ -123,11 +127,19 @@ export default function Transactions() {
     }).format(date);
   };
 
-  const handleLoadMore = () => {
-    if (hasMoreTransactions && !referralLoading) {
-      fetchTransactions();
-    }
-  };
+
+ // Pagination controls
+ const handlePreviousPage = () => {
+  if (currentPage > 1) {
+    setCurrentPage(prev => prev - 1);
+  }
+};
+
+const handleNextPage = () => {
+  if (currentPage < pagination.lastPage) {
+    setCurrentPage(prev => prev + 1);
+  }
+};
 
   if (loading || !user) {
     return <Preloader fullScreen state="transactions" />;
@@ -331,17 +343,26 @@ export default function Transactions() {
               </tbody>
             </table>
 
-            {hasMoreTransactions && (
-              <div className={styles.loadMoreContainer}>
-                <button
-                  className={styles.loadMoreButton}
-                  onClick={handleLoadMore}
-                  disabled={referralLoading}
-                >
-                  {referralLoading ? 'Loading...' : 'Load More Transactions'}
-                </button>
-              </div>
-            )}
+             {/* Pagination Controls */}
+             <div className={styles.paginationContainer}>
+              <button
+                className={styles.paginationButton}
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1 || referralLoading}
+              >
+                Previous
+              </button>
+              <span className={styles.pageNumber}>
+                Page {currentPage} of {pagination.lastPage}
+              </span>
+              <button
+                className={styles.paginationButton}
+                onClick={handleNextPage}
+                disabled={currentPage >= pagination.lastPage || referralLoading}
+              >
+                Next
+              </button>
+            </div>
           </>
         ) : (
           <div className={styles.emptyState}>
@@ -349,6 +370,8 @@ export default function Transactions() {
           </div>
         )}
       </div>
+
+      
 
       {referralLoading && <Preloader fullScreen state="transactions" />}
     </div>
