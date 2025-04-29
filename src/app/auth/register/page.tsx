@@ -140,7 +140,7 @@ export default function Register() {
         <p className={styles.subtitle}>
           {step === 1 
             ? 'Fill in your details to get started'
-            : `Verification code sent to ${countryCode}${whatsappNumber}`}
+            : `Verification code sent to ${email}`}
         </p>
       </div>
 
