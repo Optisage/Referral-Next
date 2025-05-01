@@ -54,15 +54,16 @@ const getStatusText = (status: number) => {
   const userCountry = 'canada' as CountryKey;
   const currency = CURRENCY_MAP[userCountry];
   const POINTS_TO_CASH_RATE = 100;
-  const MIN_WITHDRAWAL_AMOUNT = 4;
+  const CASH_PER_100_POINTS = 5; 
+  const MIN_WITHDRAWAL_AMOUNT = 25;
 
   // Points calculations
   const availablePoints = analytics?.points_earned || 0;
-  const availableBalance = (availablePoints / POINTS_TO_CASH_RATE) || 0;
+  const availableBalance = ((availablePoints / POINTS_TO_CASH_RATE) * CASH_PER_100_POINTS) || 0;
   
  // Update the calculator value calculation
-const calculatedValue = useMemo(() => 
-  (parseFloat(calculatorPoints) || 0) / POINTS_TO_CASH_RATE,
+ const calculatedValue = useMemo(() => 
+  ((parseFloat(calculatorPoints) || 0) / POINTS_TO_CASH_RATE) * CASH_PER_100_POINTS,
   [calculatorPoints]
 );
 
@@ -107,7 +108,7 @@ const calculatedValue = useMemo(() =>
       }
 
       // Calculate points needed
-      const pointsNeeded = parsedAmount * POINTS_TO_CASH_RATE;
+      const pointsNeeded = parsedAmount * (POINTS_TO_CASH_RATE / CASH_PER_100_POINTS);
       //if (pointsNeeded > availablePoints) {
         //throw new Error(`Insufficient points. Needed: ${pointsNeeded}`);
       //}
@@ -181,7 +182,7 @@ const calculatedValue = useMemo(() =>
             <div className={styles.text4xl}>{availablePoints.toLocaleString()}</div>
             <div className={styles.flexItems}>
               <FaExchangeAlt className={styles.icon} />
-              <span>100 point = {currency.symbol}1</span>
+              <span>100 points = {currency.symbol}{CASH_PER_100_POINTS}</span>
             </div>
           </div>
 
@@ -253,7 +254,7 @@ const calculatedValue = useMemo(() =>
                   />
                   <div className={styles.flexJustifyBetween}>
                     <span>Minimum: {currency.symbol}{MIN_WITHDRAWAL_AMOUNT}</span>
-                    <span>Points Needed: {Math.ceil(parseFloat(amount) * POINTS_TO_CASH_RATE) || 0}</span>
+                    <span>Points Needed: {Math.ceil(parseFloat(amount) * (POINTS_TO_CASH_RATE / CASH_PER_100_POINTS)) || 0}</span>
                   </div>
                 </div>
 

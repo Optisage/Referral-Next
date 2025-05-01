@@ -60,10 +60,12 @@ const [showErrorNotification, setShowErrorNotification] = useState(false);
   };
 
   // Points conversion calculations
-  const POINTS_TO_CASH_RATE = 100;
-  const totalCashValue = analytics?.points_earned 
-    ? (analytics.points_earned / POINTS_TO_CASH_RATE)
-    : 0;
+
+const POINTS_TO_CASH_RATE = 100;
+const CASH_PER_100_POINTS = 5; // New constant for clarity
+const totalCashValue = analytics?.points_earned 
+  ? (analytics.points_earned / POINTS_TO_CASH_RATE) * CASH_PER_100_POINTS
+  : 0;
     
   useEffect(() => {
     if (!loading && !user) {
@@ -203,7 +205,7 @@ useEffect(() => {
             </div>
             <div className="items-center px-3 py-1 font-semibold text-green-600 rounded-full bg-green-50">
               <span className="mr-1 text-xs"></span>
-              {analytics?.total_amount_month_growth ?? 0}this month
+              {analytics?.total_amount_month_growth ?? 0} this month
             </div>
           </div>
           <div className="mt-4">

@@ -7,6 +7,7 @@ import { useReferral } from '@/context/ReferralContext';
 import { FaSearch, FaFilter, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import styles from './transactions.module.css';
 import Preloader from '@/components/Preloader';
+import { IoFilter } from "react-icons/io5";
 
 const CURRENCY = {
   code: 'CAD',
@@ -168,8 +169,10 @@ const handleNextPage = () => {
           </div>
 
           <div className={styles.filterWrapper}>
-            <div className={styles.filterIconWrapper}>
-              <FaFilter className={styles.filterIcon} />
+          
+            <div className=''>
+              <FaFilter className=''/>
+             
             </div>
             <select
               className={styles.filterSelect}
